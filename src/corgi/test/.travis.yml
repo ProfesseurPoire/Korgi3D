@@ -1,0 +1,28 @@
+# Ubuntu 14.04 Trusty support
+sudo: required
+dist: trusty
+
+language: cpp
+
+matrix:
+  include:
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-6
+          before_instal:
+            - CC=gcc-6 && CXX=g++-6
+
+    - os: osx
+      osx_image: xcode9.2
+
+before_script:  
+    - mkdir build
+    - cd build
+    - cmake ..
+
+script: make && ctest -V

@@ -1,0 +1,36 @@
+# Ubuntu 14.04 Trusty support
+sudo: required
+dist: bionic
+
+language: cpp
+sude: enabled
+
+matrix:
+  include:
+    # works on Precise and Trusty
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-8
+            - xorg-dev 
+            - libglu1-mesa-dev
+            - libxrandr-dev
+      env:
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+        # Put that back on at the end of december 2019 , Mac OS Catalina should have been released 
+        # since then 
+    #- os: osx
+     # osx_image: xcode11.2
+
+before_install : 
+    - eval "${MATRIX_EVAL}"
+
+before_script:  
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Debug 
+
+script: make

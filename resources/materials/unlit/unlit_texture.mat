@@ -1,0 +1,5 @@
+{
+  "is_lit" : false,
+  "vertex_shader" :   "unlit_texture_vs.glsl",
+  "fragment_shader" : "unlit_texture_fs.glsl"
+}

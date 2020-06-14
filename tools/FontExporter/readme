@@ -1,0 +1,2 @@
+The font exporter executable will take a font file as an input, and will output a png and 
+a text file containing the informations about the atlas 

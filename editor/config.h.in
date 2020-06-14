@@ -1,0 +1,9 @@
+#pragma once
+
+
+#define OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+#define SOURCE_DIRECTORY "${CMAKE_SOURCE_DIR}"
+#define RESOURCE_DIRECTORY "${CMAKE_SOURCE_DIR}/resources"
+
+
+
