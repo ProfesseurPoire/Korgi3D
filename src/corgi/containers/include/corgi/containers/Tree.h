@@ -64,9 +64,9 @@ public:
 	explicit TreeIterator(Tree<T>& tree, IteratorMode mode = IteratorMode::DepthFirst):
 		mode_(mode)
 	{
-		for(auto& n : tree.children())
+		for(auto& n : tree.children().data())
 		{
-		 	queue_.push_back(n);
+		 	queue_.push_back(*n);
 		}
 		operator++();
 	}
@@ -74,9 +74,9 @@ public:
 	explicit TreeIterator(Node<T>& node, IteratorMode mode = IteratorMode::DepthFirst):
 		mode_(mode)
 	{
-		for(auto& n : node.children())
+		for(auto& n : node.children().data())
 		{
-		 	queue_.push_back(n);
+		 	queue_.push_back(*n);
 		}
 		operator++();
 	}
