@@ -66,7 +66,7 @@ public:
 	{
 		for(auto& n : tree.children())
 		{
-		 	queue_.push_front(n);
+		 	queue_.push_back(n);
 		}
 		operator++();
 	}
@@ -76,7 +76,7 @@ public:
 	{
 		for(auto& n : node.children())
 		{
-		 	queue_.push_front(n);
+		 	queue_.push_back(n);
 		}
 		operator++();
 	}
