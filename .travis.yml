@@ -14,6 +14,7 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - cmake
             - g++-8
             - xorg-dev 
             - libglu1-mesa-dev
