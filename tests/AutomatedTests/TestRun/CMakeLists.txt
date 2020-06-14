@@ -24,4 +24,4 @@ PUBLIC
     ${CMAKE_BINARY_DIR}/tests/AutomatedTests/TestRun
 )
 
-add_test( NAME TestRun-test COMMAND TestRun)
+add_test(NAME TestRun-test COMMAND TestRun)

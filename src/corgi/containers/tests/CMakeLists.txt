@@ -12,3 +12,5 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(TestContainers PUBLIC ./)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
+
+add_test( NAME TestContainers COMMAND TestContainers)
