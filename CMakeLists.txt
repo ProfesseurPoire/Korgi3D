@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16.0)
+cmake_minimum_required(VERSION 3.12.0)
 
 set(Architecture "x86" CACHE STRING "BaseName chosen by the user at CMake configure time")
 

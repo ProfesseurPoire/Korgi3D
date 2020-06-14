@@ -15,12 +15,12 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - cmake
-            - g++-8
+            - g++-9
             - xorg-dev 
             - libglu1-mesa-dev
             - libxrandr-dev
       env:
-        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8"
+        - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
         # Put that back on at the end of december 2019 , Mac OS Catalina should have been released 
         # since then 
     #- os: osx
