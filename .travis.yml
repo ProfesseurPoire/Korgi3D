@@ -32,7 +32,7 @@ matrix:
           packages:
             - clang-10
       env:
-        - MATRIX_EVAL="CC=clang-10 && CXX=clang-10 stdlib=libc++"
+        - MATRIX_EVAL="CC=clang-10 CXX=clang++-10"
     - os: osx
       osx_image: xcode11.3
       env:
