@@ -9,7 +9,16 @@ using namespace corgi;
 
 int main()
 {
-    return corgi::test::run_all();
+    try
+    {
+        auto result = corgi::test::run_all();
+        return result;
+    }
+    catch(std::exception e )
+    {
+        std::cout<<e.what()<<std::endl;
+        return 1;
+    }
 }
 
 class TestTree : public Test
