@@ -27,7 +27,7 @@ matrix:
           - ubuntu-toolchain-r-test
           packages:
             - clang-10
-      evn:
+      env:
         - MATRIX_EVAL="CC=clang-10 && CXX=clang-10"
     - os: osx
       osx_image: xcode11.3
