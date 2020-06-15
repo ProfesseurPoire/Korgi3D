@@ -429,15 +429,15 @@ friend class Children<T>;
 		// 			container so I don't have to std::find_if all the time
 		auto it = std::find_if(c.begin(), c.end(), [&](const auto& a){return a.get()==this;});
 
-		if(it->operator bool())
-		{
-			auto index = it - c.begin() ;
-			tree_.children().children_.push_back(std::move((*it)));
-			tree_.children().children_.back()->parent_=nullptr;
-			c.erase(c.begin()+index);
-			return true;
-		}
-		return false;
+		// if(it->operator bool())
+		// {
+		// 	auto index = it - c.begin() ;
+		// 	tree_.children().children_.push_back(std::move((*it)));
+		// 	tree_.children().children_.back()->parent_=nullptr;
+		// 	c.erase(c.begin()+index);
+		// 	return true;
+		// }
+		return true;
 	}
 
 private:

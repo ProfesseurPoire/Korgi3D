@@ -204,7 +204,7 @@ namespace detail
             HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
             SetConsoleTextAttribute(hConsole, color);  
         #endif
-        std::cout<<"\033[1;31mbold red text";
+        std::cout<<"\033[1;33m";
     }
             
 template<class T>
