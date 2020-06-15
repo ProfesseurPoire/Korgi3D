@@ -20,11 +20,11 @@ matrix:
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
     - os: linux
-     dist: bionic
-     addons:
-      apt:
-        sources:
-          - ubuntu-toolchain-r-test
+      dist: bionic
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
           packages:
             - clang-10
       env:
