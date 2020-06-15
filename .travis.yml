@@ -1,4 +1,7 @@
 # Ubuntu 14.04 Trusty support
+# inspiration for this whole thing comes from : https://github.com/google/re2/blob/master/.travis.yml
+# especially the part about using night build from llvm toolchain to get 
+# clang 10 support
 sudo: required
 dist: bionic
 
@@ -15,7 +18,6 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - cmake
             - g++-9
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
@@ -25,6 +27,8 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - sourceline: 'deb https://apt.llvm.org/xenial/ llvm-toolchain-xenial-10 main'
+              key_url: 'https://apt.llvm.org/llvm-snapshot.gpg.key'
           packages:
             - clang-10
       env:
