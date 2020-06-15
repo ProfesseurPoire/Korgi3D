@@ -437,6 +437,7 @@ friend class Children<T>;
 			c.erase(c.begin()+index);
 			return true;
 		}
+		return false;
 	}
 
 private:

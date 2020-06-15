@@ -204,6 +204,7 @@ namespace detail
             HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
             SetConsoleTextAttribute(hConsole, color);  
         #endif
+        std::cout<<"\033[1;31mbold red text";
     }
             
 template<class T>
@@ -402,6 +403,7 @@ void assert_that_(  T val,
     {
         set_console_color(color_code);
         write_line(line);
+        std::cout<<"\033[0m";
     }
 
     /*!
