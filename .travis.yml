@@ -42,8 +42,8 @@ matrix:
 
 before_install : 
   - if [ "$TRAVIS_DIST" = "bionic" ]; then
-      sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic-rc main'
-      sudo apt-get update
+      sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic-rc main';
+      sudo apt-get update;
     fi;
   - eval "${MATRIX_EVAL}"
 
