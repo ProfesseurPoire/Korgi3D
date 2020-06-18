@@ -55,9 +55,9 @@ before_script:
   - mkdir build
   - cd build
   - if [ "$TRAVIS_DIST" = "bionic" ]; then
-      /usr/bin/cmake .. -DCMAKE_BUILD_TYPE=Debug 
+      /usr/bin/cmake .. -DCMAKE_BUILD_TYPE=Debug;
     else
-      cmake .. -DCMAKE_BUILD_TYPE=Debug 
+      cmake .. -DCMAKE_BUILD_TYPE=Debug;
     fi;
 
 
