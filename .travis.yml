@@ -47,12 +47,13 @@ before_install :
       wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null;
       sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic main';
       sudo apt-get update;
+      sudo apt-get install cmake;
     fi;
   - eval "${MATRIX_EVAL}"
 
 before_script:  
   - mkdir build
   - cd build
-  - cmake .. -DCMAKE_BUILD_TYPE=Debug 
+  - /usr/local/bin/cmake .. -DCMAKE_BUILD_TYPE=Debug 
 
 script: make && ctest -V
