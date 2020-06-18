@@ -42,16 +42,16 @@ matrix:
         - MATRIX_EVAL="CC=clang CXX=clang++"
 
 before_install : 
-    - if [ "$TRAVIS_DIST" = "bionic" ]; then
-        sudo apt remove cmake
-        sudo apt purge --auto-remove cmake
-        sudo apt-get install cmake
-      fi;
-    - eval "${MATRIX_EVAL}"
+  - if [ "$TRAVIS_DIST" = "bionic" ]; then
+      sudo apt remove cmake;
+      sudo apt purge --auto-remove cmake;
+      sudo apt-get install cmake;
+    fi;
+  - eval "${MATRIX_EVAL}"
 
 before_script:  
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=Debug 
+  - mkdir build
+  - cd build
+  - cmake .. -DCMAKE_BUILD_TYPE=Debug 
 
 script: make && ctest -V
