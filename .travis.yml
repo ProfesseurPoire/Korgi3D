@@ -54,6 +54,6 @@ before_install :
 before_script:  
   - mkdir build
   - cd build
-  - /usr/local/bin/cmake .. -DCMAKE_BUILD_TYPE=Debug 
+  - /usr/bin/cmake .. -DCMAKE_BUILD_TYPE=Debug 
 
 script: make && ctest -V
