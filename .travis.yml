@@ -17,7 +17,7 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.7
+            - sourceline: 'deb https://apt.kitware.com/ubuntu/ bionic-rc main'
           packages:
             - g++-9
             - cmake
