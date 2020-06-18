@@ -17,7 +17,6 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - sourceline: 'deb https://apt.kitware.com/ubuntu/ bionic-rc main'
           packages:
             - g++-9
       env:
@@ -43,9 +42,8 @@ matrix:
 
 before_install : 
   - if [ "$TRAVIS_DIST" = "bionic" ]; then
-      sudo apt remove cmake;
-      sudo apt purge --auto-remove cmake;
-      sudo apt-get install cmake;
+      sudo apt-add-repository 'deb https://apt.kitware.com/ubuntu/ bionic-rc main'
+      sudo apt-get update
     fi;
   - eval "${MATRIX_EVAL}"
 
