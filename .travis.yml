@@ -44,6 +44,11 @@ matrix:
         - MATRIX_EVAL="CC=clang CXX=clang++"
 
 before_install : 
+    - if [ "$TRAVIS_DIST" = "bionic" ]; then
+        sudo apt remove cmake
+        sudo apt purge --auto-remove cmake
+        sudo apt-get install cmake
+      fi;
     - eval "${MATRIX_EVAL}"
 
 before_script:  
