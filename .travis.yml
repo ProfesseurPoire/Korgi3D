@@ -20,8 +20,6 @@ matrix:
             - sourceline: 'deb https://apt.kitware.com/ubuntu/ bionic-rc main'
           packages:
             - g++-9
-            - cmake 3.17.0
-            - cmake-data
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
     - os: linux
