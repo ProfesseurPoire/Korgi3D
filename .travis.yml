@@ -21,6 +21,7 @@ matrix:
           packages:
             - g++-9
             - cmake
+            - cmake-data
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
     - os: linux
