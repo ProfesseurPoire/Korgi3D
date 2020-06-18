@@ -15,7 +15,9 @@ matrix:
       dist: bionic
       addons:
         snaps:
-          - cmake
+          - name: cmake
+            confinement: classic # or devmode
+            channel: latest/edge # will be passed to --channel flag
         apt:
           sources:
             - ubuntu-toolchain-r-test
