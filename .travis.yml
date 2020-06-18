@@ -19,6 +19,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-9
+            - libc6-dev
       env:
         - MATRIX_EVAL="CC=gcc-9 && CXX=g++-9"
     - os: linux
