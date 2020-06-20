@@ -6,6 +6,7 @@
 #include <string>
 #include <ctime>
 #include <chrono>
+#include <functional>
 
 // Included to get access to colors inside the console
 #ifdef _WIN32
@@ -26,9 +27,14 @@
 */
 namespace corgi { namespace test {
 
+    using String = std::string;
+
+class Test;
+
     namespace detail
     {
         inline void log_failed_functions();
+        inline int register_fixture(Test* t, const std::string& class_name, const std::string& test_name);
     }
     
 /*!
@@ -36,19 +42,9 @@ namespace corgi { namespace test {
  */
 class Test
 {
-
     friend void detail::log_failed_functions();
+    friend int detail::register_fixture(Test* t, const std::string& class_name, const std::string& test_name);
 
-    friend Test* 
-        
-        init_fixture
-        (
-            Test* i,
-            const std::string& class_name,
-            const std::string& test_name
-        );
-
-    friend int run_all();
     friend void run_fixtures();
 
 public:
@@ -65,11 +61,10 @@ public:
 
     virtual ~Test()=default;
 
-
 private:
 
-    std::string _class_name;
-    std::string _test_name;
+    String _class_name;
+    String _test_name;
 
     /*!
      * @brief Overriden by the TEST_F macro
@@ -85,10 +80,7 @@ public:
     Equals(const T v1) : _val1(v1){}
 
     template<class U>
-    bool run( U val2)
-    {
-        return this->_val1 == val2;
-    }
+    bool run( U val2){return this->_val1 == val2;}
 
     T _val1;
 };
@@ -101,10 +93,7 @@ public:
     NonEquals( T v1) : _val1(v1){}
 
     template<class U>
-    bool run( U val2)
-    {
-        return this->_val1 != val2;
-    }
+    bool run( U val2){return this->_val1 != val2;}
 
     T _val1;
 };
@@ -115,60 +104,47 @@ class AlmostEquals
 public:
 
     AlmostEquals( T v1, T precision) : _val1(v1), precision(precision){}
+
     bool run( T val2) 
     {
         return (this->_val1> (val2 - precision)) && (this->_val1 < (val2 + precision));
     }
+    
     T precision;
     T _val1;
 };
 
-
 // Without this function I would have to write Equals<int>(4) instead of equals(4)
-template<class T>
-Equals<T>* equals(T val)
+template<class T>   
+std::unique_ptr<Equals<T>> equals(T val)
 {
-    return new Equals<T>(val);
+    return std::make_unique<Equals<T>>(val);
 }
 
 // Without this function I would have to write NonEquals<int>(4) instead of equals(4)
-template<class T>
-NonEquals<T>* non_equals(T val)
-{
-    return new NonEquals<T>(val);
-}
-
-template<class T>
-AlmostEquals<T>* almost_equals(T val, T precision)
-{
-    return new AlmostEquals<T>(val, precision);
-}
+template<class T> std::unique_ptr<NonEquals<T>> non_equals(T val){ return std::make_unique<NonEquals<T>>(val); }
+template<class T> std::unique_ptr<AlmostEquals<T>> almost_equals(T val, T precision){return std::make_unique<AlmostEquals<T>>(val, precision);}
 
 namespace detail 
 {
     // Typedef/Using/Classes
-    using TestFunctionPointer  = void(*)( );
+    using TestFunctionPointer = void(*)();
 
     class TestFunction
     {
     public:
 
-        TestFunction(TestFunctionPointer ptr,
-                        const std::string& name,
-                        const std::string& group)
-        {
-            this->pointer   = ptr;
-            this->name      = name;
-            this->group     = group;
-        }
+        TestFunction(TestFunctionPointer ptr, const String& name, const String& group):
+            pointer(ptr),
+            name(name),
+            group(group){}
 
         TestFunctionPointer pointer;
-        std::string         name;
-        std::string         group;
-        std::string         file;
+        String name;
+        String group;
+        String file;
         int                 line;
     };
-
 
     using FunctionList = std::vector<TestFunction>;
 
@@ -180,23 +156,10 @@ namespace detail
     inline unsigned short get_log_color()      { return 3; }
     inline unsigned short get_success_color()  { return 2; }
 
-    /*!
-        @brief  Returns how many error has been reported by the tests
-    */
-    inline int& get_error()
-    {
-        static int error; 
-        return error;
-    }
+    inline int error{0};
 
-    /*!
-        @brief  Returns the original of failed test functions
-    */
-    inline std::vector<TestFunction>& get_failed_functions()
-    {
-        static std::vector<TestFunction> failed_functions;
-        return failed_functions;
-    }
+   
+    inline std::vector<TestFunction> failed_functions;
 
     static void set_console_color(unsigned short color)
     {
@@ -250,7 +213,7 @@ void log_test_error(const T val,
 
     set_console_color(get_value_color());
     std::cerr << val << std::endl << std::endl;
-    get_error() += 1;
+    error += 1;
 }
 
 /*
@@ -258,7 +221,7 @@ void log_test_error(const T val,
  */
 template<class T, class U>
 void assert_that_(  T val, 
-                    U checker,
+                    U&& checker,
                     const std::string& value_name,
                     const std::string& expected_name,
                     const char* file,
@@ -269,71 +232,16 @@ void assert_that_(  T val,
     {
         log_test_error(val, value_name, expected_name, file, ff, line);
     }
-    delete checker;
 }
-    /*!
-        @brief      Check if @ref value and @ref expected are equals
-        @details    Use the == comparison operator. Logs an error if the 
-        condition failed and increment the error counter
-    */
-    template <class T>
-    void check_equals(  T value,
-                        T expected,
-                        const std::string& value_name,
-                        const std::string& expected_name,
-                        const char* file,
-                        const char* ff,
-                        int line)
-    {
-        if (value != expected)
-        {
-            log_test_error(value, value_name, expected_name, file, ff, line);
-        }
-    }
-
-    template<class T>
-    void check_non_equals(T value, T expected, const char* file, const char* function, int line)
-    {
-        if (value == expected)
-        {
-            set_console_color(12); // Red
-            detail::set_console_color(11);  // Blue
-            std::cerr << "Error in " << file << "::<<"<<function << " at line " << line << ":" << std::endl;
-            std::cerr << "Non expeceted : " << expected << std::endl;
-            std::cerr << "Value is : " << value << std::endl;
-            std::cerr << std::endl;
-            get_error() += 1;
-        }
-    }
             
     /*!
         @brief  Returns a map that link group_name to their original of TestFunction
         @detail Test functions that have something in common can be put inside groups.
         Thus, this map is used to know in which group a test belong.
     */
-
     inline std::map<std::string, std::vector<TestFunction>> map_test_functions;
-    inline std::map<std::string, std::vector<Test*>> fixtures_map;
-
-
-    inline std::vector<Test*>& get_failed_fixtures()
-    {
-        static std::vector<Test*> failed_fixtures;
-        return failed_fixtures;
-    }
-
-    static void cleanup()
-    {
-        auto& fixtures = fixtures_map;
-
-        for (auto& f : fixtures)
-        {
-            for (auto* ff : f.second)
-            {
-                delete ff;
-            }
-        }
-    }
+    inline std::map<std::string, std::vector<std::unique_ptr<Test>>> fixtures_map;
+    inline std::vector<Test*> failed_fixtures;
 
     /*!
         @brief      Register a test function
@@ -350,36 +258,21 @@ void assert_that_(  T val,
         @param function_name    Second parameter of the TEST macro. Correspond to the 
         function name.
     */
-    inline int register_function(
-        TestFunctionPointer func_ptr,
-        const std::string&  function_name, 
-        const std::string&  group_name)
+    inline int register_function(TestFunctionPointer func_ptr,const String& function, const String& group)
     {
-        // We first check if the group doesn't already exist
-        if (map_test_functions.find(group_name) == map_test_functions.end())
-        {
-            map_test_functions.emplace(group_name, std::vector<TestFunction>());
-        }
-        // Append the function point to the group.
-        map_test_functions[group_name].push_back(TestFunction( func_ptr,
-                                                                function_name,
-                                                                group_name));
-
+        map_test_functions[group].emplace_back(func_ptr,function,group);
         return 0; // We only return a value because of the affectation trick in the macro
     }
 
     /*!
-        @brief register a fixture object
+        @brief Register a fixture object
     */
-    inline int register_fixture(Test* t, const std::string& fixture_name, const std::string& function_name)
+    inline int register_fixture(Test* t, const std::string& class_name, const std::string& test_name)
     {
-        if (fixtures_map.find(fixture_name) == fixtures_map.end())
-        {
-            fixtures_map.emplace(fixture_name, std::vector<Test*>());
-        }
+        t->_class_name = class_name;
+        t->_test_name  = test_name;
 
-        fixtures_map[fixture_name].push_back(t);
-
+        fixtures_map[class_name].emplace_back(t); 
         return 0; // We only return a value because of the affectation trick in the macro
     }
             
@@ -411,7 +304,7 @@ void assert_that_(  T val,
     */
     inline void log_failed_functions()
     {
-        for (const auto& t : detail::get_failed_functions())
+        for (const auto& t : detail::failed_functions)
         {
             set_console_color(get_error_color());
             std::cout << "      * Function ";
@@ -421,7 +314,7 @@ void assert_that_(  T val,
             std::cout << " failed \n";
         }
 
-        for(const auto& t : detail::get_failed_fixtures())
+        for(const auto& t : detail::failed_fixtures)
         {
             set_console_color(get_path_color());
             std::cout << "      * ";
@@ -430,14 +323,6 @@ void assert_that_(  T val,
             std::cout << " failed \n";
         }
     }        
-
-    /*!
-        @brief Just log that we start the tests
-    */
-    inline void log_start()
-    {
-        write_line("RUN ALL THE THINGS!!!", get_success_color());
-    }
 
     /*!
         @brief  Logs that we successfully pass every test
@@ -469,8 +354,11 @@ void assert_that_(  T val,
         const int max_column = 78;
 
         std::string line;
+
         for (int i = 0; i < max_column; ++i)
+        {
             line += '*';
+        }
 
         write_line(line, get_log_color());
 
@@ -487,7 +375,7 @@ void assert_that_(  T val,
         @param  group_name  Name of the tested group 
         @param  group_size  How many test are inside the group
     */
-    inline void log_start_group(const std::string& group_name, int group_size)
+    inline void log_start_group(const std::string& group_name, size_t group_size)
     {
         write_title("Running " + std::to_string(group_size) + " tests grouped in " + group_name);
     }
@@ -499,10 +387,7 @@ void assert_that_(  T val,
      * @param count        Counter used to know on which test from group we're (like
      * the first one, the second one ? etc
      */
-    inline void log_start_test( const std::string& test_name,
-                                const std::string& group_name,
-                                int group_size, 
-                                int count)
+    inline void log_start_test(const String& test_name, const String& group_name, size_t group_size, size_t count)
     {
         set_console_color(get_log_color());
         std::cout << "  * Running ";
@@ -530,40 +415,45 @@ void assert_that_(  T val,
     {
         write_title("Results");
         // Log success or failure depending on the error count
-        ( detail::get_error() == 0 ) ? detail::log_success() : detail::log_failure();
+        ( detail::error == 0 ) ? detail::log_success() : detail::log_failure();
     }
+}
+
+// register the time it takes for a function to run
+inline long long function_time(std::function<void()> fun)
+{
+    const auto timer = std::chrono::high_resolution_clock::now();
+    fun();
+    const auto end_timer = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(end_timer - timer).count();
 }
 
 inline void run_fixtures()
 {
-    for (auto test : detail::fixtures_map)
+    for (auto& fixture : detail::fixtures_map) // Loop through every fixture
     {
-        int count = 1;
+        
+        auto total_test = detail::fixtures_map[fixture.first].size();
 
-        detail::log_start_group(test.first, detail::fixtures_map[test.first].size());
+        detail::log_start_group(fixture.first, total_test);
 
-        for (auto test_object : test.second)
+        int test_index{1};
+
+        for (auto& test : fixture.second) // loop through every fixture's test
         {
-            // This is trash, I would like my test function to return a value directly
-            // I'll have to check If I can do some macro magic to do that
-            int error_value = detail::get_error();
+            detail::log_start_test(test->_test_name, test->_class_name, total_test, test_index++);
 
-            detail::log_start_test
-            (
-                test_object->_test_name,
-                test_object->_class_name,
-                detail::fixtures_map[test_object->_class_name].size(),
-                count++
-            );
+            // The assert function will increment the error count if something
+            // went wrong. So we just registered how many error we had before
+            // running the fixture, and compare afterward to know if the 
+            // fixture was a success or not
+            int error_value = detail::error;
 
-            test_object->set_up();
-            const auto timer = std::chrono::high_resolution_clock::now();
-            test_object->run();
-            const auto end_timer = std::chrono::high_resolution_clock::now();
-            const long long time = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - timer).count();
-            test_object->tear_down();
-
-            if (error_value == detail::get_error())
+            test->set_up();
+            auto time = function_time([&](){test->run();});
+            test->tear_down();
+            
+            if (error_value == detail::error)
             {
                 detail::log_test_success(time);
             }
@@ -580,42 +470,33 @@ inline void run_functions()
     for (auto test : detail::map_test_functions)
     {
         // test count
-        int count = 1;
+        
+        auto total_test = detail::map_test_functions[test.first].size();
 
-        detail::log_start_group(test.first, detail::map_test_functions[test.first].size());
+        detail::log_start_group(test.first, total_test);
 
+        int test_index{1};
+        
         for (auto test_function : test.second)
         {
-            // This is trash, I would like my test function to return a value directly
-            // I'll have to check If I can do some macro magic to do that
-            int error_value = detail::get_error();
+            int error_value = detail::error;
 
-            detail::log_start_test
-            (
-                test_function.name,
-                test_function.group,
-                detail::map_test_functions[test_function.group].size(),
-                count++
-            );
+            detail::log_start_test(test_function.name,test_function.group,total_test,test_index++);
 
-            auto timer = std::chrono::high_resolution_clock::now();
-            // Runs the function
-            test_function.pointer();
+            auto time = function_time([&](){test_function.pointer();});
 
-            auto end_timer = std::chrono::high_resolution_clock::now();
-            long long time = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - timer).count();
-
-            if (error_value == detail::get_error())
+            if (error_value == detail::error)
             {
                 detail::log_test_success(time);
             }
             else
             {
-                detail::get_failed_functions().push_back(test_function);
+                detail::failed_functions.push_back(test_function);
             }
         }
     }
 }
+
 /*!
     @brief      Run all the tests defined by the user 
     @details    Must be called from main. Will fire all the test the user defined
@@ -624,23 +505,13 @@ inline void run_functions()
 */
 inline int run_all()
 {
-    detail::log_start();
-    detail::get_error() = 0;
+    detail::write_line("RUN ALL THE THINGS!!!", detail::get_success_color());
+    detail::error = 0;
     run_fixtures();
     run_functions();
     detail::log_results();
-
-    detail::cleanup();
-
     // A test run by ctest must return 0 to pass
-    return detail::get_error();
-}
-
-inline Test* init_fixture(Test* t, const std::string& class_name, const std::string& test_name )
-{
-    t->_class_name = class_name;
-    t->_test_name  = test_name;
-    return t;
+    return detail::error;
 }
 
 /*!
@@ -666,7 +537,7 @@ inline Test* init_fixture(Test* t, const std::string& class_name, const std::str
  */
 #define TEST_F(class_name, test_name)                                                         \
 class class_name##test_name : public class_name{ public : void run()override;};                     \
-static int var##class_name##test_name = corgi::test::detail::register_fixture(init_fixture(new class_name##test_name(),#class_name, #test_name),#class_name,#test_name ); \
+static int var##class_name##test_name = corgi::test::detail::register_fixture(new class_name##test_name(),#class_name,#test_name ); \
 void class_name##test_name::run()
 
 /*!
@@ -679,10 +550,6 @@ void class_name##test_name::run()
 void group_name##_##function_name();   \
 static int var##group_name##function_name = corgi::test::detail::register_function(&group_name##_##function_name, #function_name,#group_name); \
 void group_name##_##function_name()
-
-
-#define ASSERT_EQ(value, expected)   corgi::test::detail::check_equals(value, expected, #value, #expected, __FILE__, __func__, __LINE__);
-#define ASSERT_NE(value, expected)   corgi::test::detail::check_non_equals(value, expected, __FILE__, __func__, __LINE__);
 
 #define assert_that(value, expected)  \
     corgi::test::detail::assert_that_(value, expected, #value, #expected, __FILE__, __func__, __LINE__);

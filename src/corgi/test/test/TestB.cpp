@@ -1,16 +1,20 @@
 #include <corgi/test/test.h>
 
-TEST(TestB, Checka)
+using namespace corgi::test;
+
+TEST(TestB,Check)
 {
-    ASSERT_EQ(true,true);
+    assert_that(true, equals(true));
 }
 
-TEST(TestB, CheckEquals)
+TEST(TestB,CheckEquals)
 {
-    ASSERT_EQ(10, 10);
+    int val = 10;
+
+    assert_that(true, equals(true));
 }
 
-TEST(TestB, CheckNonEquals)
+TEST(TestB,CheckNonEquals)
 {
-    ASSERT_NE(10, 5);
+    assert_that(10, non_equals(5));
 }
