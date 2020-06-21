@@ -8,12 +8,8 @@
 #include <chrono>
 #include <functional>
 #include <memory>
-
-// Included to get access to colors inside the console
-#ifdef _WIN32
-    #include <windows.h>   
-#endif 
-
+#include <sstream>
+ 
 /*!
  * @brief      Provides a framework to make test driven development easier
  * @details    Use the TEST macro to define your testing functions. 
@@ -28,23 +24,24 @@
 */
 namespace corgi { namespace test {
 
-    using String = std::string;
+using String = std::string;
+template<class T> using UniquePtr = std::unique_ptr<T>;
 
 class Test;
 
 namespace detail
 {
     inline void log_failed_functions();
-    inline int register_fixture(Test* t, const std::string& class_name, const std::string& test_name);
+    inline int register_fixture(Test* t, const String& class_name, const String& test_name);
 }
 
 /*!
- * @brief Base class used by user fixtures
+ * @brief Base class used to define fixtures
  */
 class Test
 {
     friend void detail::log_failed_functions();
-    friend int detail::register_fixture(Test* t, const std::string& class_name, const std::string& test_name);
+    friend int detail::register_fixture(Test* t, const String& class_name, const String& test_name);
 
     friend void run_fixtures();
 
@@ -63,13 +60,13 @@ public:
 
 private:
 
-    String _class_name;
-    String _test_name;
-
     /*!
      * @brief Overriden by the TEST_F macro
      */
     virtual void run(){}
+
+    String _class_name;
+    String _test_name;
 };
 
 template<class T>
@@ -116,231 +113,202 @@ public:
 
 // Without this function I would have to write Equals<int>(4) instead of equals(4)
 template<class T>   
-std::unique_ptr<Equals<T>> equals(T val)
+UniquePtr<Equals<T>> equals(T val)
 {
     return std::make_unique<Equals<T>>(val);
 }
 
 // Without this function I would have to write NonEquals<int>(4) instead of equals(4)
-template<class T> std::unique_ptr<NonEquals<T>> non_equals(T val){ return std::make_unique<NonEquals<T>>(val); }
-template<class T> std::unique_ptr<AlmostEquals<T>> almost_equals(T val, T precision){return std::make_unique<AlmostEquals<T>>(val, precision);}
+template<class T> UniquePtr<NonEquals<T>> non_equals(T val){ return std::make_unique<NonEquals<T>>(val); }
+template<class T> UniquePtr<AlmostEquals<T>> almost_equals(T val, T precision){return std::make_unique<AlmostEquals<T>>(val, precision);}
 
 namespace detail 
 {
-    // Typedef/Using/Classes
-    using TestFunctionPointer = void(*)();
+// Typedef/Using/Classes
+using TestFunctionPointer = void(*)();
+template<class T> using Vector = std::vector<T>;
+template<class T, class U> using Map = std::map<T,U>;
 
-    class TestFunction
-    {
-    public:
+enum class ConsoleColor
+{
+    Black, Red, Green, Yellow, Blue, Magenta, Cyan, White
+};
 
-        TestFunction(TestFunctionPointer ptr, const String& name, const String& group):
-            pointer(ptr),
-            name(name),
-            group(group){}
+class TestFunction
+{
+public:
 
-        TestFunctionPointer pointer;
-        String name;
-        String group;
-        String file;
-        int                 line;
-    };
+    TestFunction(TestFunctionPointer ptr, const String& name, const String& group):
+        pointer(ptr),
+        name(name),
+        group(group){}
 
-    using FunctionList = std::vector<TestFunction>;
+    TestFunctionPointer pointer;
+    String name;
+    String group;
+    String file;
+    int                 line;
+};
 
 // Variables 
 
-    inline unsigned short get_path_color()     { return 6; }
-    inline unsigned short get_value_color()    { return 5; }
-    inline unsigned short get_error_color()    { return 4; }
-    inline unsigned short get_log_color()      { return 3; }
-    inline unsigned short get_success_color()  { return 2; }
+inline Map<String, Vector<TestFunction>> map_test_functions;
+inline Map<String, Vector<std::unique_ptr<Test>>> fixtures_map;
+inline Vector<Test*> failed_fixtures;
+inline Vector<TestFunction> failed_functions;
 
-    inline int error{0};
+inline int error{0};
 
-   
-    inline std::vector<TestFunction> failed_functions;
+inline ConsoleColor current_color{ ConsoleColor::White};
 
-    static void set_console_color(unsigned short color)
-    {
-        #ifdef _WIN32
-            HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-            SetConsoleTextAttribute(hConsole, color);  
-        #endif
-        std::cout<<"\033[1;33m";
-    }
-            
-template<class T>
-void log_test_error(const T val,
-               const std::string& value_name,
-               const std::string& expected_name,
-               const char* file,
-               const char* function,
-               int line)
+inline std::map<ConsoleColor,String> color_code
 {
-    set_console_color(get_error_color());
-    std::cerr << "        ! Error :\n ";
-    set_console_color(get_log_color());
-    std::cout << "           * file :     ";
+    {ConsoleColor::Black,"30m"}, 
+    {ConsoleColor::Red, "31m"},
+    {ConsoleColor::Green, "32m"},
+    {ConsoleColor::Yellow, "33m"},
+    {ConsoleColor::Blue, "34m"},
+    {ConsoleColor::Magenta, "35m"},
+    {ConsoleColor::Cyan, "36m"},
+    {ConsoleColor::White, "37m"},
+};
 
-    set_console_color(get_path_color());
-    std::cerr << file << "\n";
+template<class T>
+void log_test_error(const T val, const String& value_name, const String& expected, const char* file, int line)
+{
+    write_line("\n        ! Error : ",ConsoleColor::Red);
+    write("            * file :     ", ConsoleColor::Cyan);
+    write_line(file, ConsoleColor::Yellow);
+    write("            * line :     ", ConsoleColor::Cyan);
+    write_line(std::to_string(line), ConsoleColor::Magenta);
+    write("            * Check if ", ConsoleColor::Cyan);
+    write("\"" + value_name + "\" ", ConsoleColor::Magenta);
+    write("== ");
+    write_line("\"" + expected + "\"");
+    write("                * Expected : ", ConsoleColor::Cyan);
+    write_line(expected, ConsoleColor::Magenta);
+    write("                * Value is : ", ConsoleColor::Cyan);
 
-    set_console_color(get_log_color());
-    std::cerr << "            * line :     ";
-
-    set_console_color(get_value_color());
-    std::cerr << line << "\n";
-
-    set_console_color(get_log_color());
-    std::cout << "            * Check if ";
-    set_console_color(get_path_color());
-    std::cout << "\"" << value_name << "\" ";
-    set_console_color(get_log_color());
-    std::cout << "== ";
-    set_console_color(get_path_color());
-    std::cout << "\"" << expected_name << "\"\n";
-    set_console_color(get_path_color());
-
-    set_console_color(get_log_color());
-    std::cerr << "                * Expected : ";
-
-    set_console_color(get_value_color());
-    std::cerr << expected_name << std::endl;
-
-    set_console_color(get_log_color());
-    std::cerr << "                * Value is : ";
-
-    set_console_color(get_value_color());
-    std::cerr << val << std::endl << std::endl;
+    std::stringstream ss;
+    ss << val;
+    write_line(ss.str(), ConsoleColor::Magenta);
     error += 1;
 }
 
-/*
+/*!
  * @brief 
  */
-template<class T, class U>
-void assert_that_(  T val, 
-                    U&& checker,
-                    const std::string& value_name,
-                    const std::string& expected_name,
-                    const char* file,
-                    const char* ff,
-                    int line)
+template<class T, class U>  // Maybe the function signature could be smaller 
+void assert_that_(T val, U&& checker,const String& value, const String& expected, const char* file, int line)
 {
     if (checker->run(val) == false)
     {
-        log_test_error(val, value_name, expected_name, file, ff, line);
+        log_test_error(val, value, expected, file, line);
     }
 }
-            
-    /*!
-        @brief  Returns a map that link group_name to their original of TestFunction
-        @detail Test functions that have something in common can be put inside groups.
-        Thus, this map is used to know in which group a test belong.
-    */
-    inline std::map<std::string, std::vector<TestFunction>> map_test_functions;
-    inline std::map<std::string, std::vector<std::unique_ptr<Test>>> fixtures_map;
-    inline std::vector<Test*> failed_fixtures;
 
-    /*!
-        @brief      Register a test function
-        Called by the TEST macro.  The TEST macro declares a function 
-        that will be named from the combination of the @ref group_name and @ref
-        function_name parameters.
-        Then, it will create a unique variable whose only goal is to call
-        the register_function with a pointer to the previously declared function, along
-        with the function name and the group (parameters of the TEST macro)
-        Finally, it will start the function definition.
-        @param func             Pointer to the test function created by the TEST macro
-        @param group_name       First parameter of the TEST macro. Correspond to the group
-        in which the function belong
-        @param function_name    Second parameter of the TEST macro. Correspond to the 
-        function name.
-    */
-    inline int register_function(TestFunctionPointer func_ptr,const String& function, const String& group)
+/*!
+    @brief      Register a test function
+    Called by the TEST macro.  The TEST macro declares a function 
+    that will be named from the combination of the @ref group_name and @ref
+    function_name parameters.
+    Then, it will create a unique variable whose only goal is to call
+    the register_function with a pointer to the previously declared function, along
+    with the function name and the group (parameters of the TEST macro)
+    Finally, it will start the function definition.
+    @param func             Pointer to the test function created by the TEST macro
+    @param group_name       First parameter of the TEST macro. Correspond to the group
+    in which the function belong
+    @param function_name    Second parameter of the TEST macro. Correspond to the 
+    function name.
+*/
+inline int register_function(TestFunctionPointer func_ptr,const String& function, const String& group)
+{
+    map_test_functions[group].emplace_back(func_ptr,function,group);
+    return 0; // We only return a value because of the affectation trick in the macro
+}
+
+/*!
+    @brief Register a fixture object
+*/
+inline int register_fixture(Test* t, const String& class_name, const String& test_name)
+{
+    t->_class_name = class_name;
+    t->_test_name  = test_name;
+
+    fixtures_map[class_name].emplace_back(t); 
+    return 0; // We only return a value because of the affectation trick in the macro
+}
+
+/*!
+ * @brief Just a shortcut so I don't have to write std::cout<< text << "\n" all the time
+ */
+inline void write_line(const String& str)
+{
+    std::cout<<"\033[0;"<<color_code[current_color];
+    std::cout << str.c_str() <<"\033[0m\n";
+}
+
+inline void write(const String& str)
+{
+    std::cout<<"\033[0;"<<color_code[current_color];
+    std::cout<<str.c_str()<<"\033[0m";
+}
+
+inline void write(const String& str, ConsoleColor code_color)
+{
+    current_color = code_color;
+    write(str);
+}
+
+/*!
+ *
+ * @brief  Write a line of text and changes the console color
+ * @param line         Contains the text to be displayed
+ * @param color_code   Contains a code corresponding to a color. To know which 
+ * code to use, you should prefer to use the @ref get_error_color() @ref get_path_color()
+ * @ref get_log_color() @ref get_success_color() and @ get_value_color() 
+ * to get the code with the color you want.
+ */
+inline void write_line(const String& line, ConsoleColor console_color)
+{
+    current_color = console_color;
+    write_line(line);
+}
+
+/*!
+ * @brief  Logs every failed function inside the console as a summary report
+ */
+inline void log_failed_functions()
+{
+    for (const auto& t : detail::failed_functions)
     {
-        map_test_functions[group].emplace_back(func_ptr,function,group);
-        return 0; // We only return a value because of the affectation trick in the macro
+        write_line("      * Function "+ t.group + "::" + t.name+" failed", ConsoleColor::Red);
     }
 
-    /*!
-        @brief Register a fixture object
-    */
-    inline int register_fixture(Test* t, const std::string& class_name, const std::string& test_name)
+    for(const auto& t : detail::failed_fixtures)
     {
-        t->_class_name = class_name;
-        t->_test_name  = test_name;
-
-        fixtures_map[class_name].emplace_back(t); 
-        return 0; // We only return a value because of the affectation trick in the macro
+        write_line("      * "+t->_class_name+"::"+t->_test_name+" failed", ConsoleColor::Red);
     }
-            
-    /*!
-        @ brief Just a shortcut so I don't have to write std::cout<< text << "\n" all the time
-    */
-    inline void write_line(const std::string& str)
-    {
-        std::cout << str.c_str() << "\n";
-    }
+}        
 
-    /*!
-        @brief  Write a line of text and changes the console color
-        @param line         Contains the text to be displayed
-        @param color_code   Contains a code corresponding to a color. To know which 
-        code to use, you should prefer to use the @ref get_error_color() @ref get_path_color()
-        @ref get_log_color() @ref get_success_color() and @ get_value_color() 
-        to get the code with the color you want.
-    */
-    inline void write_line(const std::string& line, unsigned short color_code)
-    {
-        set_console_color(color_code);
-        write_line(line);
-        std::cout<<"\033[0m";
-    }
+/*!
+ * @brief  Logs that we successfully pass every test
+ */
+inline void log_success()
+{
+    write_line("    * Every test passed", ConsoleColor::Green);
+}
 
-    /*!
-        @brief  Logs every failed function inside the console as a summary report
-    */
-    inline void log_failed_functions()
-    {
-        for (const auto& t : detail::failed_functions)
-        {
-            set_console_color(get_error_color());
-            std::cout << "      * Function ";
-            set_console_color(get_path_color());
-            std::cout << t.group << "::" << t.name;
-            set_console_color(get_error_color());
-            std::cout << " failed \n";
-        }
-
-        for(const auto& t : detail::failed_fixtures)
-        {
-            set_console_color(get_path_color());
-            std::cout << "      * ";
-            std::cout << t->_class_name << "::" << t->_test_name;
-            set_console_color(get_error_color());
-            std::cout << " failed \n";
-        }
-    }        
-
-    /*!
-        @brief  Logs that we successfully pass every test
-    */
-    inline void log_success()
-    {
-        write_line("    * Every test passed",get_success_color());
-    }
-
-    /*!
-        @brief  Logs that at least 1 test failed
-    */
-    inline void log_failure()
-    {
-        write_line("    Error : Some test failed to pass", get_error_color());
-        write_line("    Logging the Functions that failed");
-        log_failed_functions();
-    }
+/*!
+ * @brief  Logs that at least 1 test failed
+ */
+inline void log_failure()
+{
+    write_line("    Error : Some test failed to pass", ConsoleColor::Red);
+    write_line("    Logging the Functions that failed", ConsoleColor::Cyan);
+    log_failed_functions();
+}
 
 /*!
     @brief  Write an header in the console
@@ -349,11 +317,11 @@ void assert_that_(  T val,
     *   Text  *  
     ***********
 */
-inline void write_title(const std::string& text)
+inline void write_title(const String& text)
 {
     const int max_column = 78;
 
-    write_line(String(max_column,'*'), get_log_color());
+    write_line(String(max_column,'*'), ConsoleColor::Green);
     write_line("*    "+text+String(max_column-1 - (5+text.size()), ' ')+"*");
     write_line(String(max_column,'*'));
 }
@@ -363,48 +331,42 @@ inline void write_title(const std::string& text)
     @param  group_name  Name of the tested group 
     @param  group_size  How many test are inside the group
 */
-inline void log_start_group(const std::string& group_name, size_t group_size)
+inline void log_start_group(const String& group_name, size_t group_size)
 {
     write_title("Running " + std::to_string(group_size) + " tests grouped in " + group_name);
 }
 
-    /*!
-     * @brief Log that we're starting a test
-     * @param test_name    Name of the test we're running
-     * @param group_name   Name of the group the test belongs to
-     * @param count        Counter used to know on which test from group we're (like
-     * the first one, the second one ? etc
-     */
-    inline void log_start_test(const String& test_name, const String& group_name, size_t group_size, size_t count)
-    {
-        set_console_color(get_log_color());
-        std::cout << "  * Running ";
-        set_console_color(get_path_color());
-        std::cout << group_name << "." << test_name;
-        set_console_color(get_log_color());
-        std::cout << " (" << count << "/" << group_size << ") \n";
-    }
+/*!
+ * @brief Log that we're starting a test
+ * @param test_name    Name of the test we're running
+ * @param group_name   Name of the group the test belongs to
+ * @param count        Counter used to know on which test from group we're (like
+ * the first one, the second one ? etc
+ */
+inline void log_start_test(const String& test_name, const String& group_name, size_t group_size, size_t count)
+{
+    write("  * Running ", ConsoleColor::Cyan);
+    write( group_name+"."+test_name, ConsoleColor::Yellow);
+    write(" (" + std::to_string(count) + "/" + std::to_string(group_size) + ")", ConsoleColor::Cyan);
+}
 
-    /*!
-     * @brief  Log that a test was successful
-     */
-    inline void log_test_success(long long time)
-    {
-        set_console_color(get_success_color());
-        std::cout.precision(3);
-        double d = static_cast<double>(time) / 1000.0;
-        std::cout << "       Passed in " <<std::fixed<< d << " ms \n";
-    }
+/*!
+ * @brief  Log that a test was successful
+ */
+inline void log_test_success(long long time)
+{
+    write_line("\n       Passed in " + std::to_string(static_cast<double>(time) / 1000.0) + " ms", ConsoleColor::Green);
+}
 
-    /*!
-     * @brief  Logs all the results
-     */
-    inline void log_results()
-    {
-        write_title("Results");
-        // Log success or failure depending on the error count
-        ( detail::error == 0 ) ? detail::log_success() : detail::log_failure();
-    }
+/*!
+ * @brief  Logs all the results
+ */
+inline void log_results()
+{
+    write_title("Results");
+    // Log success or failure depending on the error count
+    ( detail::error == 0 ) ? detail::log_success() : detail::log_failure();
+}
 }
 
 // register the time it takes for a function to run
@@ -440,7 +402,6 @@ inline void run_fixtures()
             auto time = function_time([&](){test->run();});
             test->tear_down();
             
-            // maybe write something like "test.failed()?"
             if (error_value == detail::error)
             {
                 detail::log_test_success(time);
@@ -458,11 +419,9 @@ inline void run_functions()
     for (auto test : detail::map_test_functions)
     {
         auto total_test = detail::map_test_functions[test.first].size();
-
         detail::log_start_group(test.first, total_test);
 
         int test_index{1};
-
         for (auto test_function : test.second)
         {
             detail::log_start_test(test_function.name,test_function.group,total_test,test_index++);
@@ -476,20 +435,18 @@ inline void run_functions()
 }
 
 /*!
-    @brief      Run all the tests defined by the user 
-    @details    Must be called from main. Will fire all the test the user defined
-    with the TEST macro. Warning, this function returns a value that must be returned
-    inside the main function!
-*/
+ * @brief      Run all the tests defined by the user 
+ * @details    Must be called from main. Will fire all the test the user defined
+ * with the TEST macro. Warning, this function returns a value that must be returned
+ * inside the main function!
+ */
 inline int run_all()
 {
-    detail::write_line("RUN ALL THE THINGS!!!", detail::get_success_color());
-    detail::error = 0;
+    detail::write_line("RUN ALL THE THINGS!!!", detail::ConsoleColor::Green);
     run_fixtures();
     run_functions();
     detail::log_results();
-    // A test run by ctest must return 0 to pass
-    return detail::error;
+    return detail::error;   // Must return 0 to pass
 }
 
 /*!
@@ -519,16 +476,16 @@ static int var##class_name##test_name = corgi::test::detail::register_fixture(ne
 void class_name##test_name::run()
 
 /*!
-    @brief      Replace the TEST macro with a function registered by the framework
-    @details    Ok so the trick is a little bit dirty, and the parameter should
-    actually not be a string for it to works. The idea is to create an useless variable
-    so I can call the register function. 
-*/
+ * @brief      Replace the TEST macro with a function registered by the framework
+ * @details    Ok so the trick is a little bit dirty, and the parameter should
+ * actually not be a string for it to works. The idea is to create an useless variable
+ * so I can call the register function. 
+ */
 #define TEST(group_name,function_name)\
 void group_name##_##function_name();   \
 static int var##group_name##function_name = corgi::test::detail::register_function(&group_name##_##function_name, #function_name,#group_name); \
 void group_name##_##function_name()
 
 #define assert_that(value, expected)  \
-    corgi::test::detail::assert_that_(value, expected, #value, #expected, __FILE__, __func__, __LINE__);
+    corgi::test::detail::assert_that_(value, expected, #value, #expected, __FILE__, __LINE__);
 }}
