@@ -7,6 +7,7 @@
 #include <ctime>
 #include <chrono>
 #include <functional>
+#include <memory>
 
 // Included to get access to colors inside the console
 #ifdef _WIN32
@@ -31,12 +32,12 @@ namespace corgi { namespace test {
 
 class Test;
 
-    namespace detail
-    {
-        inline void log_failed_functions();
-        inline int register_fixture(Test* t, const std::string& class_name, const std::string& test_name);
-    }
-    
+namespace detail
+{
+    inline void log_failed_functions();
+    inline int register_fixture(Test* t, const std::string& class_name, const std::string& test_name);
+}
+
 /*!
  * @brief Base class used by user fixtures
  */
@@ -58,7 +59,6 @@ public:
      * @brief Override this function to release the fixture resources
      */
     virtual void tear_down(){}
-
     virtual ~Test()=default;
 
 private:
@@ -342,43 +342,31 @@ void assert_that_(  T val,
         log_failed_functions();
     }
 
-    /*!
-        @brief  Write an header in the console
-        @detail Just write something in that way inside the console
-        ***********
-        *   Text  *  
-        ***********
-    */
-    inline void write_title(const std::string& text)
-    {
-        const int max_column = 78;
+/*!
+    @brief  Write an header in the console
+    @detail Just write something in that way inside the console
+    ***********
+    *   Text  *  
+    ***********
+*/
+inline void write_title(const std::string& text)
+{
+    const int max_column = 78;
 
-        std::string line;
+    write_line(String(max_column,'*'), get_log_color());
+    write_line("*    "+text+String(max_column-1 - (5+text.size()), ' ')+"*");
+    write_line(String(max_column,'*'));
+}
 
-        for (int i = 0; i < max_column; ++i)
-        {
-            line += '*';
-        }
-
-        write_line(line, get_log_color());
-
-        std::string title = "*    "+text;
-
-        title.append(max_column-1 - title.size(), ' ');
-        title += ( '*' );
-        write_line(title);
-        write_line(line);
-    }
-
-    /*!
-        @brief  Logs that we're running tests that belongs to the @ref group_name group
-        @param  group_name  Name of the tested group 
-        @param  group_size  How many test are inside the group
-    */
-    inline void log_start_group(const std::string& group_name, size_t group_size)
-    {
-        write_title("Running " + std::to_string(group_size) + " tests grouped in " + group_name);
-    }
+/*!
+    @brief  Logs that we're running tests that belongs to the @ref group_name group
+    @param  group_name  Name of the tested group 
+    @param  group_size  How many test are inside the group
+*/
+inline void log_start_group(const std::string& group_name, size_t group_size)
+{
+    write_title("Running " + std::to_string(group_size) + " tests grouped in " + group_name);
+}
 
     /*!
      * @brief Log that we're starting a test
@@ -432,7 +420,6 @@ inline void run_fixtures()
 {
     for (auto& fixture : detail::fixtures_map) // Loop through every fixture
     {
-        
         auto total_test = detail::fixtures_map[fixture.first].size();
 
         detail::log_start_group(fixture.first, total_test);
@@ -453,6 +440,7 @@ inline void run_fixtures()
             auto time = function_time([&](){test->run();});
             test->tear_down();
             
+            // maybe write something like "test.failed()?"
             if (error_value == detail::error)
             {
                 detail::log_test_success(time);
@@ -469,30 +457,20 @@ inline void run_functions()
 {
     for (auto test : detail::map_test_functions)
     {
-        // test count
-        
         auto total_test = detail::map_test_functions[test.first].size();
 
         detail::log_start_group(test.first, total_test);
 
         int test_index{1};
-        
+
         for (auto test_function : test.second)
         {
-            int error_value = detail::error;
-
             detail::log_start_test(test_function.name,test_function.group,total_test,test_index++);
 
+            int error_value = detail::error;
             auto time = function_time([&](){test_function.pointer();});
 
-            if (error_value == detail::error)
-            {
-                detail::log_test_success(time);
-            }
-            else
-            {
-                detail::failed_functions.push_back(test_function);
-            }
+            (error_value == detail::error) ? detail::log_test_success(time): detail::failed_functions.push_back(test_function);
         }
     }
 }
