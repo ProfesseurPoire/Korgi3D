@@ -100,9 +100,9 @@ class AlmostEquals
 {
 public:
 
-    AlmostEquals( T v1, T precision) : _val1(v1), precision(precision){}
+    AlmostEquals(T v1,T precision) : _val1(v1), precision(precision){}
 
-    bool run( T val2) 
+    bool run(T val2) 
     {
         return (this->_val1> (val2 - precision)) && (this->_val1 < (val2 + precision));
     }
@@ -111,14 +111,8 @@ public:
     T _val1;
 };
 
-// Without this function I would have to write Equals<int>(4) instead of equals(4)
-template<class T>   
-UniquePtr<Equals<T>> equals(T val)
-{
-    return std::make_unique<Equals<T>>(val);
-}
-
-// Without this function I would have to write NonEquals<int>(4) instead of equals(4)
+// These functions allows us to write equals(4) instead of Equals<int>(4) 
+template<class T> UniquePtr<Equals<T>> equals(T val){return std::make_unique<Equals<T>>(val);}
 template<class T> UniquePtr<NonEquals<T>> non_equals(T val){ return std::make_unique<NonEquals<T>>(val); }
 template<class T> UniquePtr<AlmostEquals<T>> almost_equals(T val, T precision){return std::make_unique<AlmostEquals<T>>(val, precision);}
 
@@ -161,7 +155,7 @@ inline int error{0};
 
 inline ConsoleColor current_color{ ConsoleColor::White};
 
-inline std::map<ConsoleColor,String> color_code
+const inline std::map<ConsoleColor,String> color_code // can't constexpr sadly
 {
     {ConsoleColor::Black,"30m"}, 
     {ConsoleColor::Red, "31m"},
@@ -245,13 +239,13 @@ inline int register_fixture(Test* t, const String& class_name, const String& tes
  */
 inline void write_line(const String& str)
 {
-    std::cout<<"\033[0;"<<color_code[current_color];
+    std::cout<<"\033[0;"<<color_code.at(current_color);
     std::cout << str.c_str() <<"\033[0m\n";
 }
 
 inline void write(const String& str)
 {
-    std::cout<<"\033[0;"<<color_code[current_color];
+    std::cout<<"\033[0;"<<color_code.at(current_color);
     std::cout<<str.c_str()<<"\033[0m";
 }
 
