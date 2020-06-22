@@ -167,6 +167,39 @@ const inline std::map<ConsoleColor,String> color_code // can't constexpr sadly
     {ConsoleColor::White, "37m"},
 };
 
+/*!
+ * @brief Just a shortcut so I don't have to write std::cout<< text << "\n" all the time
+ */
+inline void write_line(const String& str)
+{
+    std::cout<<"\033[0;"<<color_code.at(current_color);
+    std::cout << str.c_str() <<"\033[0m\n";
+}
+
+inline void write(const String& str)
+{
+    std::cout<<"\033[0;"<<color_code.at(current_color);
+    std::cout<<str.c_str()<<"\033[0m";
+}
+
+inline void write(const String& str, ConsoleColor code_color)
+{
+    current_color = code_color;
+    write(str);
+}
+
+/*!
+ * @brief  Write a line of text and changes the console color
+ * @param line         Contains the text to be displayed
+ * @param console_color   Contains a code corresponding to a color
+ */
+inline void write_line(const String& line, ConsoleColor console_color)
+{
+    current_color = console_color;
+    write_line(line);
+}
+
+
 template<class T>
 void log_test_error(const T val, const String& value_name, const String& expected, const char* file, int line)
 {
@@ -234,41 +267,7 @@ inline int register_fixture(Test* t, const String& class_name, const String& tes
     return 0; // We only return a value because of the affectation trick in the macro
 }
 
-/*!
- * @brief Just a shortcut so I don't have to write std::cout<< text << "\n" all the time
- */
-inline void write_line(const String& str)
-{
-    std::cout<<"\033[0;"<<color_code.at(current_color);
-    std::cout << str.c_str() <<"\033[0m\n";
-}
 
-inline void write(const String& str)
-{
-    std::cout<<"\033[0;"<<color_code.at(current_color);
-    std::cout<<str.c_str()<<"\033[0m";
-}
-
-inline void write(const String& str, ConsoleColor code_color)
-{
-    current_color = code_color;
-    write(str);
-}
-
-/*!
- *
- * @brief  Write a line of text and changes the console color
- * @param line         Contains the text to be displayed
- * @param color_code   Contains a code corresponding to a color. To know which 
- * code to use, you should prefer to use the @ref get_error_color() @ref get_path_color()
- * @ref get_log_color() @ref get_success_color() and @ get_value_color() 
- * to get the code with the color you want.
- */
-inline void write_line(const String& line, ConsoleColor console_color)
-{
-    current_color = console_color;
-    write_line(line);
-}
 
 /*!
  * @brief  Logs every failed function inside the console as a summary report
