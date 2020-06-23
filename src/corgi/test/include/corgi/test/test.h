@@ -271,7 +271,7 @@ inline int register_fixture(const String& class_name, const String& test_name)
     }
     catch(const std::exception& e)
     {
-        std::cerr<<" ERROR " << e.what() << '\n';
+        std::cout<<" ERROR " << e.what() << std::endl;
         return 0;
     }
 }
