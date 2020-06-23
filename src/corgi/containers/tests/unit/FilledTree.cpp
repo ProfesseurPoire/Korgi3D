@@ -283,21 +283,21 @@ TEST_F(TestTree, node_iterator)
     assert_that(i, equals(5)); 
 }
 
-TEST_F(TestTree, Remove_RootNode_EmptyTheTree)
-{
-    containers::remove(tree.children().data(), 0);
+// TEST_F(TestTree, Remove_RootNode_EmptyTheTree)
+// {
+//     containers::remove(tree.children().data(), 0);
 
-    assert_that(tree.children().empty(), equals(true));
-    assert_that(tree.children().size(), equals(0));
-}
+//     assert_that(tree.children().empty(), equals(true));
+//     assert_that(tree.children().size(), equals(0));
+// }
 
-TEST_F(TestTree, Remove_RemoveSecondeNode_KeepRootNode)
-{
-    containers::remove(node11->children().data(),0);
+// TEST_F(TestTree, Remove_RemoveSecondeNode_KeepRootNode)
+// {
+//     containers::remove(node11->children().data(),0);
 
-    assert_that(tree.children().empty(),equals(false));
-    assert_that(node11->children().size(), equals(1));
-}
+//     assert_that(tree.children().empty(),equals(false));
+//     assert_that(node11->children().size(), equals(1));
+// }
 
 TEST_F(TestTree, test_event)
 {
