@@ -259,14 +259,20 @@ inline int register_function(TestFunctionPointer func_ptr,const String& function
 */
 inline int register_fixture(Test* t, const String& class_name, const String& test_name)
 {
-    t->_class_name = class_name;
-    t->_test_name  = test_name;
+    try
+    {
+        t->_class_name = class_name;
+        t->_test_name  = test_name;
 
-    fixtures_map[class_name].emplace_back(t); 
-    return 0; // We only return a value because of the affectation trick in the macro
+        fixtures_map[class_name].emplace_back(t); 
+        return 0; // We only return a value because of the affectation trick in the macro
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr<<" ERROR " << e.what() << '\n';
+        return 0;
+    }
 }
-
-
 
 /*!
  * @brief  Logs every failed function inside the console as a summary report
