@@ -6,6 +6,7 @@ enable_testing()
 
 set_property(CACHE Architecture PROPERTY STRINGS x86 x64)
 
+SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 #add_subdirectory(tools/FontExporter)
 #add_subdirectory(tools/ResourcesPackager)
