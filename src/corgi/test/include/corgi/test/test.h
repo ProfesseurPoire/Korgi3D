@@ -32,7 +32,7 @@ class Test;
 namespace detail
 {
     inline void log_failed_functions();
-    inline int register_fixture(Test* t, const String& class_name, const String& test_name);
+    template<class T> inline int register_fixture(const String& class_name, const String& test_name);
 }
 
 /*!
@@ -41,7 +41,7 @@ namespace detail
 class Test
 {
     friend void detail::log_failed_functions();
-    friend int detail::register_fixture(Test* t, const String& class_name, const String& test_name);
+    template<class T> friend  int detail::register_fixture(const String& class_name, const String& test_name);
 
     friend void run_fixtures();
 
@@ -58,11 +58,11 @@ public:
     virtual void tear_down(){}
     virtual ~Test()=default;
 
-    String _class_name;
-    String _test_name;
 
 private:
 
+    String _class_name;
+    String _test_name;
     /*!
      * @brief Overriden by the TEST_F macro
      */
