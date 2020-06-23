@@ -51,6 +51,7 @@ before_install :
 
 before_script:  
   - mkdir build
+  - mkdir bin/Debug
   - cd build
   - if [ "$TRAVIS_DIST" = "bionic" ]; then
       /usr/bin/cmake .. -DCMAKE_BUILD_TYPE=Debug;
