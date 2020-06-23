@@ -90,31 +90,31 @@ TEST_F(TestTree, clear)
     assert_that(tree.children().size(), equals(0));
 }
 
-// TEST_F(TestTree, node_emplace)
-// {
-//     auto& node = tree.children().emplace_back();
-//     auto& child = node.children().emplace_back(15);
-//     assert_that(child.get().number, equals(15));
-// }
+TEST_F(TestTree, node_emplace)
+{
+    auto& node = tree.children().emplace_back();
+    auto& child = node.children().emplace_back(15);
+    assert_that(child.get().number, equals(15));
+}
 
-// TEST_F(TestTree, node_size)
-// {
-//     auto& node = tree.children().emplace_back();
-//     assert_that(node.children().size(), equals(0));
-//     assert_that(node.is_leaf(), equals(true));
-//     auto& child = node.children().emplace_back(15);
-//     assert_that(node.children().size(), equals(1));
-//     assert_that(node.is_leaf(),equals(false));
-// }
+TEST_F(TestTree, node_size)
+{
+    auto& node = tree.children().emplace_back();
+    assert_that(node.children().size(), equals(0));
+    assert_that(node.is_leaf(), equals(true));
+    auto& child = node.children().emplace_back(15);
+    assert_that(node.children().size(), equals(1));
+    assert_that(node.is_leaf(),equals(false));
+}
 
-// TEST_F(TestTree, node_parent)
-// {
-//     auto& node  = tree.children().emplace_back(10);
-//     auto& child = node.children().emplace_back(20);
+TEST_F(TestTree, node_parent)
+{
+    auto& node  = tree.children().emplace_back(10);
+    auto& child = node.children().emplace_back(20);
 
-//     assert_that(child.parent(), non_equals(nullptr));
-//     assert_that(child.parent()->get().number, equals(10));
-// }
+    assert_that(child.parent(), non_equals(nullptr));
+    assert_that(child.parent()->get().number, equals(10));
+}
 
 // TEST_F(TestTree, node_clear)
 // {
