@@ -55,10 +55,10 @@ TEST_F(TestTree, size)
     assert_that(tree.children().size(), equals(1));
 }
 
-// TEST_F(TestTree, empty)
-// {
-//     assert_that(tree.children().empty(), equals(false));
-// }
+TEST_F(TestTree, empty)
+{
+    assert_that(tree.children().empty(), equals(false));
+}
 
 // TEST_F(TestTree, children_emplace)
 // {
