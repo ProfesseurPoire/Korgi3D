@@ -16,4 +16,5 @@ sln/
 .vscode/
 logs/
 build/
+bin/
 *.TMP
