@@ -30,10 +30,10 @@ TEST_F(TestEmptyTree, Size_EqualZero)
     assert_that(tree.children().size(), equals(0));
 }
 
-// TEST_F(TestEmptyTree, Empty_EqualsTrue)
-// {
-//     assert_that(tree.children().empty(), equals(true));
-// }
+TEST_F(TestEmptyTree, Empty_EqualsTrue)
+{
+    assert_that(tree.children().empty(), equals(true));
+}
 
 // TEST_F(TestEmptyTree, Emplace_ConstructOneComponentInPlace)
 // {
