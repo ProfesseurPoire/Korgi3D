@@ -72,23 +72,23 @@ TEST_F(TestTree, children_emplace)
     assert_that(tree.children().size(), equals(2));
 }
 
-// TEST_F(TestTree, children_emplace_parameter_pack)
-// {
-//     auto& node = tree.children().emplace_back(14);
-//     assert_that(node.get().number, equals(14));
-// }
+TEST_F(TestTree, children_emplace_parameter_pack)
+{
+    auto& node = tree.children().emplace_back(14);
+    assert_that(node.get().number, equals(14));
+}
 
-// TEST_F(TestTree, clear)
-// {
-//     // Action
+TEST_F(TestTree, clear)
+{
+    // Action
     
-//     tree.children().clear();
+    tree.children().clear();
 
-//     // Assert
+    // Assert
 
-//     assert_that(tree.children().empty(), equals(true));
-//     assert_that(tree.children().size(), equals(0));
-// }
+    assert_that(tree.children().empty(), equals(true));
+    assert_that(tree.children().size(), equals(0));
+}
 
 // TEST_F(TestTree, node_emplace)
 // {
