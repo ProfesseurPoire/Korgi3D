@@ -283,13 +283,13 @@ TEST_F(TestTree, node_iterator)
     assert_that(i, equals(5)); 
 }
 
-// TEST_F(TestTree, Remove_RootNode_EmptyTheTree)
-// {
-//     containers::remove(tree.children().data(), 0);
+TEST_F(TestTree, Remove_RootNode_EmptyTheTree)
+{
+    containers::remove(tree.children().data(), 0);
 
-//     assert_that(tree.children().empty(), equals(true));
-//     assert_that(tree.children().size(), equals(0));
-// }
+    assert_that(tree.children().empty(), equals(true));
+    assert_that(tree.children().size(), equals(0));
+}
 
 // TEST_F(TestTree, Remove_RemoveSecondeNode_KeepRootNode)
 // {
