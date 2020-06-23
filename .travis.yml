@@ -60,4 +60,4 @@ before_script:
       cmake .. -DCMAKE_BUILD_TYPE=Debug;
     fi;
 
-script: make && cd ..  && b/TestContainers.exe
+script: make && cd ..  && b/TestContainers
