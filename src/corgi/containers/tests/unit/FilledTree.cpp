@@ -60,17 +60,17 @@ TEST_F(TestTree, empty)
     assert_that(tree.children().empty(), equals(false));
 }
 
-// TEST_F(TestTree, children_emplace)
-// {
-//     // Action
+TEST_F(TestTree, children_emplace)
+{
+    // Action
     
-//     auto& component = tree.children().emplace_back();
+    auto& component = tree.children().emplace_back();
 
-//     // Assert
+    // Assert
 
-//     assert_that(component.get().number, equals(3));
-//     assert_that(tree.children().size(), equals(2));
-// }
+    assert_that(component.get().number, equals(3));
+    assert_that(tree.children().size(), equals(2));
+}
 
 // TEST_F(TestTree, children_emplace_parameter_pack)
 // {
