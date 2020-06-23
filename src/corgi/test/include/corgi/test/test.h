@@ -58,15 +58,15 @@ public:
     virtual void tear_down(){}
     virtual ~Test()=default;
 
+    String _class_name;
+    String _test_name;
+
 private:
 
     /*!
      * @brief Overriden by the TEST_F macro
      */
     virtual void run(){}
-
-    String _class_name;
-    String _test_name;
 };
 
 template<class T>
@@ -257,10 +257,12 @@ inline int register_function(TestFunctionPointer func_ptr,const String& function
 /*!
     @brief Register a fixture object
 */
-inline int register_fixture(Test* t, const String& class_name, const String& test_name)
+template<class T>
+inline int register_fixture(const String& class_name, const String& test_name)
 {
     try
     {
+        T* t = new T();
         t->_class_name = class_name;
         t->_test_name  = test_name;
 
@@ -470,7 +472,7 @@ inline int run_all()
  */
 #define TEST_F(class_name, test_name)                                                         \
 class class_name##test_name : public class_name{ public : void run()override;};                     \
-static int var##class_name##test_name = corgi::test::detail::register_fixture(new class_name##test_name(),#class_name,#test_name ); \
+static int var##class_name##test_name = corgi::test::detail::register_fixture<class_name##test_name>(#class_name,#test_name ); \
 void class_name##test_name::run()
 
 /*!
