@@ -366,26 +366,26 @@ TEST_F(TestTree, tree_push_back_illegal_operation)
     assert_that(result, equals(false));
 }
 
-TEST_F(TestTree, Detach_PutNodeAtRoot)
-{
-    // Action
+// TEST_F(TestTree, Detach_PutNodeAtRoot)
+// {
+//     // Action
 
-    auto result = node22->detach();
+//     auto result = node22->detach();
 
-    // Assert
+//     // Assert
 
-    assert_that(result, equals(true));
-    assert_that(node22->parent(), equals(nullptr));
-    assert_that(tree.children()[1]->number, equals(22));
-    assert_that(node11->children().size(), equals(1));
-}
+//     assert_that(result, equals(true));
+//     assert_that(node22->parent(), equals(nullptr));
+//     assert_that(tree.children()[1]->number, equals(22));
+//     assert_that(node11->children().size(), equals(1));
+// }
 
-TEST_F(TestTree, Detach_OnRootNode_ReturnFalse)
-{
-    auto result = node11->detach();
+// TEST_F(TestTree, Detach_OnRootNode_ReturnFalse)
+// {
+//     auto result = node11->detach();
 
-    assert_that(result, equals(false));
-}
+//     assert_that(result, equals(false));
+// }
 
 // TEST_F(TestTree, tree_swap)
 // {

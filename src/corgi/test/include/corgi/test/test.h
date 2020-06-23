@@ -199,7 +199,6 @@ inline void write_line(const String& line, ConsoleColor console_color)
     write_line(line);
 }
 
-
 template<class T>
 void log_test_error(const T val, const String& value_name, const String& expected, const char* file, int line)
 {

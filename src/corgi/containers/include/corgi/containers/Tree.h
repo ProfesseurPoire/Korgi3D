@@ -106,8 +106,6 @@ public:
 			current_node_=nullptr;
 			return *this;
 		}
-		// Not a huge fan of having a switch case, would have prefer to have
-		// really 2 different Iterator for the 2 different mode
 		switch(mode_)
 		{
 			case IteratorMode::BreadthFirst:
