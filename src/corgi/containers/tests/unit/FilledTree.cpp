@@ -210,78 +210,78 @@ TEST_F(TestTree, tree_iterator)
 }
 
 
-// TEST_F(TestTree, node_iterator)
-// {
-//     tree.iterator_mode(IteratorMode::DepthFirst);
+TEST_F(TestTree, node_iterator)
+{
+    tree.iterator_mode(IteratorMode::DepthFirst);
 
-//     int i=0;
+    int i=0;
 
-//     //  11 
-//     //  |____ 21
-//     //  |     |____ 31
-//     //  |     |____ 32
-//     //  |           |____41
-//     //  |_____22
+    //  11 
+    //  |____ 21
+    //  |     |____ 31
+    //  |     |____ 32
+    //  |           |____41
+    //  |_____22
 
-//     for(auto& node : *node11)
-//     {
-//         switch(i)
-//         {
-//         case 0:
-//             assert_that(node.get().number, equals(21));
-//         break;
-//         case 1:
-//             assert_that(node.get().number, equals(31));
-//         break;
-//         case 2:
-//             assert_that(node.get().number, equals(32))
-//         break;
-//         case 3:
-//             assert_that(node.get().number, equals(41));
-//         break;
-//         case 4:
-//             assert_that(node.get().number, equals(22));
-//         break;
-//         }
-//         i++;
-//     }
-//     assert_that(i, equals(5)); // Checks if we iterated the right amount of time
+    for(auto& node : *node11)
+    {
+        switch(i)
+        {
+        case 0:
+            assert_that(node.get().number, equals(21));
+        break;
+        case 1:
+            assert_that(node.get().number, equals(31));
+        break;
+        case 2:
+            assert_that(node.get().number, equals(32))
+        break;
+        case 3:
+            assert_that(node.get().number, equals(41));
+        break;
+        case 4:
+            assert_that(node.get().number, equals(22));
+        break;
+        }
+        i++;
+    }
+    assert_that(i, equals(5)); // Checks if we iterated the right amount of time
 
-//     node11->iterator_mode(IteratorMode::BreadthFirst);
+    node11->iterator_mode(IteratorMode::BreadthFirst);
 
-//     //  11 
-//     //  |____ 21
-//     //  |     |____ 31
-//     //  |     |____ 32
-//     //  |           |____41
-//     //  |_____22
+    //  11 
+    //  |____ 21
+    //  |     |____ 31
+    //  |     |____ 32
+    //  |           |____41
+    //  |_____22
 
-//     i=0;
-//     for(auto& node : *node11)
-//     {
-//         switch(i)
-//         {
-//         case 0:
-//             assert_that(node.get().number, equals(21));
-//         break;
-//         case 1:
-//             assert_that(node.get().number, equals(22));
-//         break;
-//         case 2:
-//             assert_that(node.get().number, equals(31))
-//         break;
-//         case 3:
-//             assert_that(node.get().number, equals(32));
-//         break;
-//         case 4:
-//             assert_that(node.get().number, equals(41));
-//         break;
-//         }
-//         i++;
-//     }
-//     // just making sure we iterated the right amount of time 
-//     assert_that(i, equals(5)); 
-// }
+    i=0;
+    for(auto& node : *node11)
+    {
+        switch(i)
+        {
+        case 0:
+            assert_that(node.get().number, equals(21));
+        break;
+        case 1:
+            assert_that(node.get().number, equals(22));
+        break;
+        case 2:
+            assert_that(node.get().number, equals(31))
+        break;
+        case 3:
+            assert_that(node.get().number, equals(32));
+        break;
+        case 4:
+            assert_that(node.get().number, equals(41));
+        break;
+        }
+        i++;
+    }
+    // just making sure we iterated the right amount of time 
+    assert_that(i, equals(5)); 
+}
 
 // TEST_F(TestTree, Remove_RootNode_EmptyTheTree)
 // {
