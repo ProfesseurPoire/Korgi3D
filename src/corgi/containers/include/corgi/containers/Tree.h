@@ -195,6 +195,7 @@ class Iterator
 {
 public:
 
+	// STL functions needs theses typedefs
 	using iterator_category = std::output_iterator_tag;
 	using value_type        = Node<T>;
 	using difference_type   = int;
@@ -248,7 +249,7 @@ private:
 			return false;
 		}
 
-		std::vector<UniquePtr<Node<T>>>* children{nullptr};
+		std::vector<std::unique_ptr<Node<T>>>* children{nullptr};
 		(node.parent())? children = &node.parent()->children().children_ : children = &tree_.children().children_;
 
 		auto it = std::find_if(children->begin(), children->end(), [&](const auto& a){return a.get()==&node;});
@@ -275,7 +276,7 @@ private:
 		}
 
 		// Would love to have this be only 1 line
-		std::vector<UniquePtr<Node<T>>>* children{nullptr};
+		std::vector<std::unique_ptr<Node<T>>>* children{nullptr};
 		(node.parent())? children = &node.parent()->children().children_ : children = &tree_.children().children_;
 		
 		auto it = std::find_if(children->begin(), children->end(), [&](const auto& a){return a.get()==&node;});
@@ -318,7 +319,7 @@ private:
 private:
 
 	Tree<T>&   tree_;
-	Vector<UniquePtr<Node<T>>> children_;
+	Vector<std::unique_ptr<Node<T>>> children_;
 	// Can be optional because this is used by the tree too
 	Node<T>* parent_{nullptr};
 };
@@ -335,9 +336,9 @@ friend class Children<T>;
 	template<class ... Args>
 	explicit Node(Tree<T>& tree, Args&& ... args):
 		value_(std::forward<Args>(args)...),
-		tree_(tree)
+		tree_(tree),
+		children_(*this)
 	{
-		children_ = { std::make_unique<Children<T>>(*this) };
 		tree_.on_node_created_callback_(*this);
 	}
 
@@ -345,21 +346,22 @@ friend class Children<T>;
 	explicit Node(Node<T>* parent, Args&& ... args):
 		value_(std::forward<Args>(args)...),
 		parent_(parent),
-		tree_(parent->tree_)
+		tree_(parent->tree_),
+		children_(*this)
 	{
-		children_ = { std::make_unique<Children<T>>(*this) };
 		tree_.on_node_created_callback_(*this);
 	}
 
 	Node(const Node<T>& node):
-		tree_(node.tree_)
+		tree_(node.tree_),
+		children_(*this)
 	{
 		value_		= node.value_;
-		children_	= { std::make_unique<Children<T>>(*this) };
 
+		// Not a huge fan of this loop
 		for(const auto& child : node.children())
 		{
-			children_->children_.emplace_back(std::make_unique<Node>(child));
+			children_.children_.emplace_back(std::make_unique<Node>(child));
 		}
 	}
 
@@ -393,7 +395,7 @@ friend class Children<T>;
 	[[nodiscard]] auto end()noexcept{return TreeIterator<T>();}
 	[[nodiscard]] auto end()const noexcept{return TreeIterator<T>();}
 
-	[[nodiscard]] bool is_leaf()const noexcept{return children_->empty();}
+	[[nodiscard]] bool is_leaf()const noexcept{return children_.empty();}
 
 	[[nodiscard]] Node<T>* parent() noexcept{ return parent_;}
 	[[nodiscard]] const Node<T>* parent()const noexcept{return parent_;}
@@ -401,8 +403,8 @@ friend class Children<T>;
 	[[nodiscard]] T& get()noexcept{return value_;}
 	[[nodiscard]] const T& get()const noexcept{return value_;}
 
-	[[nodiscard]] Children<T>& children()noexcept{return *children_.get();}
-	[[nodiscard]] const Children<T>& children()const noexcept{return *children_.get();}
+	[[nodiscard]] Children<T>& children()noexcept{return children_;}
+	[[nodiscard]] const Children<T>& children()const noexcept{return children_;}
 
 	[[nodiscard]] T* operator->()noexcept{return &value_;}
 	[[nodiscard]] const T* operator->()const noexcept{return &value_;}
@@ -440,17 +442,15 @@ friend class Children<T>;
 
 private:
 
-	UniquePtr<Children<T>>  children_;
+	Children<T>  children_;
+
 	T                       value_;
 	Node<T>*                parent_                 {nullptr};
-
-	// Kinda need a reference to the tree the node is a part of
-	Tree<T>&                tree_;
+	Tree<T>&                tree_;	// Need a reference to the tree the node is part of
 
 	// This part is used to iterate the children nodes
 	IteratorMode            mode_                   {IteratorMode::DepthFirst};
 	bool                    recursive_iterator_     {true};
-	
 };
 
 // Note : I can't make the Tree class constexpr because of std::vector
@@ -482,19 +482,16 @@ private:
 
 	IteratorMode iterator_mode_{IteratorMode::DepthFirst};
 	bool recursive_iterator_{ true };
-	// Only using a unique_ptr instead of object here because otherwise 
-	// the compiler complains because he doesn't know everything related to
-	// Children yet
-	UniquePtr<Children<T>> children_{std::make_unique<Children<T>>(*this)};
+	Children<T> children_{*this};
 };
 
 // Implementation
 
 template<class T>   
-Children<T>& Tree<T>::children()noexcept { return *children_.get(); }
+Children<T>& Tree<T>::children()noexcept { return children_; }
 
 template<class T>
-const Children<T>& Tree<T>::children()const noexcept { return *children_.get(); }
+const Children<T>& Tree<T>::children()const noexcept { return children_; }
 
 template<class T>
 TreeIterator<T> Tree<T>::begin() noexcept { return TreeIterator<T>(*this, iterator_mode_); }

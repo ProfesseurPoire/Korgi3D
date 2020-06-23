@@ -383,7 +383,6 @@ TEST_F(TestTree, Detach_PutNodeAtRoot)
 TEST_F(TestTree, Detach_OnRootNode_ReturnFalse)
 {
     auto result = node11->detach();
-
     assert_that(result, equals(false));
 }
 
