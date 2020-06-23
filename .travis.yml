@@ -58,4 +58,4 @@ before_script:
       cmake .. -DCMAKE_BUILD_TYPE=Debug;
     fi;
 
-script: make && ctest -VV
+script: make && ctest -VV --debug --ouput-on-failure
