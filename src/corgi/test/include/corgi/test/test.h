@@ -442,10 +442,18 @@ inline void run_functions()
  */
 inline int run_all()
 {
-    detail::write_line("RUN ALL THE THINGS!!!", detail::ConsoleColor::Green);
-    run_fixtures();
-    run_functions();
-    detail::log_results();
+    try
+    {
+        detail::write_line("RUN ALL THE THINGS!!!", detail::ConsoleColor::Green);
+        run_fixtures();
+        run_functions();
+        detail::log_results();
+        detail::fixtures_map.clear();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
     return detail::error;   // Must return 0 to pass
 }
 
