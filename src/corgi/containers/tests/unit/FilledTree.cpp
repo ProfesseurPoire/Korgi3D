@@ -358,13 +358,13 @@ TEST_F(TestTree, tree_push_back_move)
     assert_that(node11->children()[2].children()[0].get().number,equals(41));
 }
 
-TEST_F(TestTree, tree_push_back_illegal_operation)
-{
-    // Can't move a node that is a parent from the current node as a child
-    bool result = node31->children().push_back(std::move(*node11));
+// TEST_F(TestTree, tree_push_back_illegal_operation)
+// {
+//     // Can't move a node that is a parent from the current node as a child
+//     bool result = node31->children().push_back(std::move(*node11));
 
-    assert_that(result, equals(false));
-}
+//     assert_that(result, equals(false));
+// }
 
 // TEST_F(TestTree, Detach_PutNodeAtRoot)
 // {
