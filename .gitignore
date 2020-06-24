@@ -17,4 +17,5 @@ sln/
 logs/
 build/
 bin/
+b/
 *.TMP

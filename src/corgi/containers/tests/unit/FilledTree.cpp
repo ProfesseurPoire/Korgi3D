@@ -303,18 +303,18 @@ TEST_F(TestTree, test_event)
 {
     int created_count_{0};
 
-   // auto creation_cb = 
-
-    //auto remove_cb =  
-
-    tree.on_node_created_event()+= [&](Node<Component>& comp)
+    std::function<void(Node<Component>&)> creation_cb = [&](Node<Component>& comp)
     {
         created_count_++;
     };
-    tree.on_node_removed_event()+= [&](Node<Component>& comp)
+
+    std::function<void(Node<Component>&)> remove_cb =  [&](Node<Component>& comp)
     {
         created_count_--;
     };
+
+    tree.on_node_created_event().operator+=<std::function<void(Node<Component>&)>>(creation_cb);
+    tree.on_node_removed_event().operator+=<std::function<void(Node<Component>&)>>(creation_cb);
 
     auto& node11 = tree.children().emplace_back(11);
     auto& node21 = node11.children().emplace_back(21);
