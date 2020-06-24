@@ -1,4 +1,4 @@
-#include "Collisions.h"
+#include <corgi/math/Collisions.h>
 
 namespace corgi::math
 {

@@ -1,5 +1,5 @@
-#include "Matrix.h"
-#include "MathUtils.h"
+#include <corgi/math/Matrix.h>
+#include <corgi/math/MathUtils.h>
 
 namespace corgi {
 

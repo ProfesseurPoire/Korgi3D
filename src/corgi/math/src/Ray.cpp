@@ -1,5 +1,4 @@
-#include "Ray.h"
-
+#include <corgi/math/Ray.h>
 namespace corgi
 {
 	Ray::Ray(const Vec3& a, const Vec3& b)

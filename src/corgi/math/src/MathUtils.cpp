@@ -1,16 +1,14 @@
-#include "MathUtils.h"
-
-#include <corgi/logger/log.h>
+#include <corgi/math/MathUtils.h>
 
 #include <cmath>
 #include <stdlib.h>
 
 float corgi::math::to_float(int value)
 {
-	if(value> 100'000'000 || value < -100'000'000)
-	{
-		log_warning("Losing precision when converting int value to float");
-	}
+	// if(value> 100'000'000 || value < -100'000'000)
+	// {
+	// 	log_warning("Losing precision when converting int value to float");
+	// }
 	return static_cast<float>(value);
 }
 

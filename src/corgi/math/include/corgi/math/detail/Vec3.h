@@ -134,19 +134,16 @@ namespace corgi {
 				static const Vec3 backward;
 
 				//Constructors
-
 				
 				Vec3() = default;
 
 				//  TODO : Real talk, would a move constructor be faster on the vector3 thingie?
-				
-
 
 				explicit constexpr Vec3(ValueType x, ValueType y = 0, ValueType z = 0) noexcept
 					: x(x), y(y), z(z) {};
 
-				// Totally unsafe 
-				Vec3(const float* a) : x(a[0]), y(a[1]), z(a[2]) {}
+				Vec3(const float* a) :	// Totally unsafe
+					x(a[0]), y(a[1]), z(a[2]) {} 
 
 				constexpr Vec3(const Vec2<ValueType>& v)noexcept : x(v.x), y(v.y), z(0.0f){}
 				constexpr Vec3(const Vec3& v) noexcept : x(v.x), y(v.y), z(v.z) {}
@@ -166,57 +163,43 @@ namespace corgi {
 
 				constexpr Vec3& operator=(const Vec3& v) noexcept
 				{
-					x = v.x;
-					y = v.y;
-					z = v.z;
+					x = v.x;	y = v.y;	z = v.z;
 					return *this;
 				}
 
 				constexpr Vec3& operator=(Vec3&& v) noexcept
 				{
-					x = v.x;
-					y = v.y;
-					z = v.z;
+					x = v.x;	y = v.y;	z = v.z;
 					return *this;
 				}
 
 				constexpr Vec3& operator+=(const Vec3& v) noexcept
 				{
-					x += v.x;
-					y += v.y;
-					z += v.z;
+					x += v.x;	y += v.y;	z += v.z;
 					return  *this;
 				}
 
 				constexpr Vec3& operator-=(const Vec3& v) noexcept
 				{
-					x -= v.x;
-					y -= v.y;
-					z -= v.z;
+					x -= v.x;	y -= v.y;	z -= v.z;
 					return *this;
 				}
 
 				constexpr Vec3& operator*=(const Vec3& v) noexcept
 				{
-					x *= v.x;
-					y *= v.y;
-					z *= v.z;
+					x *= v.x;	y *= v.y;	z *= v.z;
 					return *this;
 				}
 
 				constexpr Vec3& operator*=(const ValueType n) noexcept
 				{
-					x *= n;
-					y *= n;
-					z *= n;
+					x *= n;		y *= n;		z *= n;
 					return *this;
 				}
 
 				constexpr Vec3& operator/=(const ValueType n) noexcept
 				{
-					x /= n;
-					y /= n;
-					z /= n;
+					x /= n;		y /= n;		z /= n;
 					return *this;
 				}
 
@@ -304,6 +287,11 @@ namespace corgi {
 					return (x * v.x) + (y * v.y) + (z * v.z);
 				}
 
+				[[nodiscard]] bool operator==(const Vec3& v) const noexcept
+				{
+					return (x == v.x && y == v.y && z == v.z);
+				}
+
 				// Variables
 
 				ValueType x = ValueType();
@@ -322,7 +310,6 @@ namespace corgi {
 			template<class ValueType> const Vec3<ValueType> Vec3<ValueType>::down(+0, -1, +0);
 			template<class ValueType> const Vec3<ValueType> Vec3<ValueType>::forward( +0, +0, +1);
 			template<class ValueType> const Vec3<ValueType> Vec3<ValueType>::backward(+0, +0, -1);
-
 
 			template<class T>
 			std::ostream& operator<<(std::ostream& os, const Vec3<T>& a) 
