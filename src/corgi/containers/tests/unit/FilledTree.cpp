@@ -303,18 +303,18 @@ TEST_F(TestTree, test_event)
 {
     int created_count_{0};
 
-    auto creation_cb = [&](Node<Component>& comp)
+   // auto creation_cb = 
+
+    //auto remove_cb =  
+
+    tree.on_node_created_event()+= [&](Node<Component>& comp)
     {
         created_count_++;
     };
-
-    auto remove_cb =  [&](Node<Component>& comp)
+    tree.on_node_removed_event()+= [&](Node<Component>& comp)
     {
         created_count_--;
     };
-
-    tree.on_node_created_event()+= creation_cb;
-    tree.on_node_removed_event()+= remove_cb;
 
     auto& node11 = tree.children().emplace_back(11);
     auto& node21 = node11.children().emplace_back(21);
