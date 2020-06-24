@@ -448,7 +448,8 @@ inline int run_all()
         run_fixtures();
         run_functions();
         detail::log_results();
-        detail::fixtures_map.clear();
+        detail::fixtures_map.clear();   // I wonder what actually happened ...
+                                        // If I clear the fixtures manually here, it won't die 
     }
     catch(const std::exception& e)
     {
