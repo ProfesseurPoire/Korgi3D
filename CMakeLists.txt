@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.12.0)
 
+project(cabba)
+
 set(Architecture "x86" CACHE STRING "BaseName chosen by the user at CMake configure time")
 
 enable_testing()
