@@ -41,6 +41,8 @@ class TestTree : public Test
 
 protected:
 
+    int created_count_{0};
+
     Tree<Component> tree;
     Node<Component>* node11;
     Node<Component>* node21;
@@ -301,20 +303,18 @@ TEST_F(TestTree, Remove_RemoveSecondeNode_KeepRootNode)
 
 TEST_F(TestTree, test_event)
 {
-    int created_count_{0};
-
-    std::function<void(Node<Component>&)> creation_cb = [&](Node<Component>& comp)
+    auto creation_cb = [&](Node<Component>& comp)
     {
         created_count_++;
     };
 
-    std::function<void(Node<Component>&)> remove_cb =  [&](Node<Component>& comp)
+    auto remove_cb =  [&](Node<Component>& comp)
     {
         created_count_--;
     };
 
-    tree.on_node_created_event().operator+=<std::function<void(Node<Component>&)>>(creation_cb);
-    tree.on_node_removed_event().operator+=<std::function<void(Node<Component>&)>>(creation_cb);
+    tree.on_node_created_event().operator+=(creation_cb);
+    tree.on_node_removed_event().operator+=(creation_cb);
 
     auto& node11 = tree.children().emplace_back(11);
     auto& node21 = node11.children().emplace_back(21);
@@ -331,70 +331,70 @@ TEST_F(TestTree, tree_is_parent)
     assert_that(node31->is_parent(*node11), equals(false));
 }
 
-// TEST_F(TestTree, tree_push_back_copy)
-// {
-//     bool result = node11->children().push_back(*node32);
+TEST_F(TestTree, tree_push_back_copy)
+{
+    bool result = node11->children().push_back(*node32);
 
-//     assert_that(result, equals(true));
+    assert_that(result, equals(true));
 
-//     assert_that(node11->children().size(), equals(3));
-//     assert_that(node21->children().size(), equals(2));
+    assert_that(node11->children().size(), equals(3));
+    assert_that(node21->children().size(), equals(2));
 
-//     assert_that(node11->children()[2].get().number, equals(32));
-//     assert_that(node11->children()[2].children()[0].get().number,equals(41));
-// }
+    assert_that(node11->children()[2].get().number, equals(32));
+    assert_that(node11->children()[2].children()[0].get().number,equals(41));
+}
 
-// TEST_F(TestTree, tree_push_back_move)
-// {
-//     // passing the thing by move
-//     bool result = node11->children().push_back(std::move(*node32));
+TEST_F(TestTree, tree_push_back_move)
+{
+    // passing the thing by move
+    bool result = node11->children().push_back(std::move(*node32));
 
-//     assert_that(result, equals(true));
+    assert_that(result, equals(true));
 
-//     assert_that(node11->children().size(), equals(3));
-//     assert_that(node21->children().size(), equals(1));
+    assert_that(node11->children().size(), equals(3));
+    assert_that(node21->children().size(), equals(1));
 
-//     assert_that(node11->children()[2].get().number, equals(32));
-//     assert_that(node11->children()[2].children()[0].get().number,equals(41));
-// }
+    assert_that(node11->children()[2].get().number, equals(32));
+    assert_that(node11->children()[2].children()[0].get().number,equals(41));
+}
 
-// TEST_F(TestTree, tree_push_back_illegal_operation)
-// {
-//     // Can't move a node that is a parent from the current node as a child
-//     bool result = node31->children().push_back(std::move(*node11));
+TEST_F(TestTree, tree_push_back_illegal_operation)
+{
+    // Can't move a node that is a parent from the current node as a child
+    bool result = node31->children().push_back(std::move(*node11));
 
-//     assert_that(result, equals(false));
-// }
+    assert_that(result, equals(false));
+}
 
-// TEST_F(TestTree, Detach_PutNodeAtRoot)
-// {
-//     // Action
+TEST_F(TestTree, Detach_PutNodeAtRoot)
+{
+    // Action
 
-//     auto result = node22->detach();
+    auto result = node22->detach();
 
-//     // Assert
+    // Assert
 
-//     assert_that(result, equals(true));
-//     assert_that(node22->parent(), equals(nullptr));
-//     assert_that(tree.children()[1]->number, equals(22));
-//     assert_that(node11->children().size(), equals(1));
-// }
+    assert_that(result, equals(true));
+    assert_that(node22->parent(), equals(nullptr));
+    assert_that(tree.children()[1]->number, equals(22));
+    assert_that(node11->children().size(), equals(1));
+}
 
-// TEST_F(TestTree, Detach_OnRootNode_ReturnFalse)
-// {
-//     auto result = node11->detach();
-//     assert_that(result, equals(false));
-// }
+TEST_F(TestTree, Detach_OnRootNode_ReturnFalse)
+{
+    auto result = node11->detach();
+    assert_that(result, equals(false));
+}
 
-// TEST_F(TestTree, tree_swap)
-// {
-//     auto& node11 = tree.children().emplace_back(11);
-//     auto& node21 = node11.children().emplace_back(21);
-//     auto& node31 = node21.children().emplace_back(31);
+TEST_F(TestTree, tree_swap)
+{
+    auto& node11 = tree.children().emplace_back(11);
+    auto& node21 = node11.children().emplace_back(21);
+    auto& node31 = node21.children().emplace_back(31);
 
-//     node21.swap(node11);
+    node21.swap(node11);
 
-//     assert_that(node31.parent()->get().get().number, equals(11))
-//     assert_that(tree.children()[0].get().number, equals(21));
-//     assert_that(tree.children()[0].parent().operator bool(), equals(false));
-// }
+    assert_that(node31.parent()->get().get().number, equals(11))
+    assert_that(tree.children()[0].get().number, equals(21));
+    assert_that(tree.children()[0].parent().operator bool(), equals(false));
+}
