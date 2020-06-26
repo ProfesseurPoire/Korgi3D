@@ -17,7 +17,8 @@ project(corgiTest VERSION 1.0.0)
 # else()
 #     set(arch_suffix "64")
 # endif()
-# set(target_name ${PROJECT_NAME}${debug_suffix})
+ #set(target_name ${PROJECT_NAME}${debug_suffix})
+ set(target_name ${PROJECT_NAME})
 
 add_library(${target_name} INTERFACE)
 
