@@ -3,8 +3,8 @@
 #include <corgi/math/MathUtils.h>
 #include <corgi/math/detail/Vec2.h>
 
-namespace corgi::detail {
-		
+namespace corgi::detail 
+{
 template <class ValueType>
 class Vec3
 {
@@ -282,8 +282,8 @@ public:
 	}
 
 	/*!
-		* @brief  Compute the cross product of vectors $\f \vec{v} \vec{u} $\f
-		*/
+	 * @brief  Compute the cross product of vectors $\f \vec{v} \vec{u} $\f
+	 */
 	[[nodiscard]] constexpr Vec3 cross(const Vec3& v)const noexcept
 	{
 		return Vec3

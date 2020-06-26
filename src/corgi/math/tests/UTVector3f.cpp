@@ -2,20 +2,17 @@
 #include <corgi/test/test.h>
 #include <ostream>
 
-
 using namespace corgi::math;
 using namespace corgi;
-
+using namespace std;
+using namespace corgi::test;
 
 static std::ostream& operator<<(std::ostream& o, const Vec3& v)
 {
    return o << "{ x : " << v.x << " ; y = " << v.y << " ; z = " << v.z << " }";
 }
 
-#include <corgi/test/test.h>
 
-using namespace std;
-using namespace corgi::test;
 
 class Vector3Testing : public Test
 {
