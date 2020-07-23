@@ -174,12 +174,14 @@ inline void write_line(const String& str)
 {
     std::cout<<"\033[0;"<<color_code.at(current_color);
     std::cout << str.c_str() <<"\033[0m\n";
+    std::cout<<std::flush;
 }
 
 inline void write(const String& str)
 {
     std::cout<<"\033[0;"<<color_code.at(current_color);
     std::cout<<str.c_str()<<"\033[0m";
+    std::cout<<std::flush;
 }
 
 inline void write(const String& str, ConsoleColor code_color)
@@ -348,6 +350,7 @@ inline void log_start_test(const String& test_name, const String& group_name, si
     write("  * Running ", ConsoleColor::Cyan);
     write( group_name+"."+test_name, ConsoleColor::Yellow);
     write(" (" + std::to_string(count) + "/" + std::to_string(group_size) + ")", ConsoleColor::Cyan);
+    std::cout<<std::flush;
 }
 
 /*!
@@ -383,10 +386,9 @@ inline void run_fixtures()
     for (auto& fixture : detail::fixtures_map) // Loop through every fixture
     {
         auto total_test = detail::fixtures_map[fixture.first].size();
-
-        detail::log_start_group(fixture.first, total_test);
-
         int test_index{1};
+  
+        detail::log_start_group(fixture.first, total_test);
 
         for (auto& test : fixture.second) // loop through every fixture's test
         {
@@ -410,6 +412,7 @@ inline void run_fixtures()
             {
                 //detail::get_failed_fixtures().push_back(test_object);
             }
+            std::cout<<std::flush;
         }
     }
 }
