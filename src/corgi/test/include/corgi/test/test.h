@@ -172,16 +172,12 @@ const inline std::map<ConsoleColor,String> color_code // can't constexpr sadly
  */
 inline void write_line(const String& str)
 {
-    std::cout<<"\033[0;"<<color_code.at(current_color);
-    std::cout << str.c_str() <<"\033[0m\n";
-    std::cout<<std::flush;
+    std::cout<<"\033[0;"<<color_code.at(current_color)<<str.c_str()<<" \033[0m"<<std::endl;
 }
 
 inline void write(const String& str)
 {
-    std::cout<<"\033[0;"<<color_code.at(current_color);
-    std::cout<<str.c_str()<<"\033[0m";
-    std::cout<<std::flush;
+    std::cout<<"\033[0;"<<color_code.at(current_color)<<str.c_str()<<" \033[0m"<<std::flush;
 }
 
 inline void write(const String& str, ConsoleColor code_color)
@@ -350,7 +346,7 @@ inline void log_start_test(const String& test_name, const String& group_name, si
     write("  * Running ", ConsoleColor::Cyan);
     write( group_name+"."+test_name, ConsoleColor::Yellow);
     write(" (" + std::to_string(count) + "/" + std::to_string(group_size) + ")", ConsoleColor::Cyan);
-    std::cout<<std::flush;
+    std::cout<<std::endl;
 }
 
 /*!
@@ -358,7 +354,7 @@ inline void log_start_test(const String& test_name, const String& group_name, si
  */
 inline void log_test_success(long long time)
 {
-    write_line("\n       Passed in " + std::to_string(static_cast<double>(time) / 1000.0) + " ms", ConsoleColor::Green);
+    write_line("       Passed in " + std::to_string(static_cast<double>(time) / 1000.0) + " ms", ConsoleColor::Green);
 }
 
 /*!
