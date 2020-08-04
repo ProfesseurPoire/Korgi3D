@@ -10,6 +10,10 @@
 #include <memory>
 #include <sstream>
  
+ #ifdef _WIN32
+    #include <windows.h>   
+#endif
+
 /*!
  * @brief      Provides a framework to make test driven development easier
  * @details    Use the TEST macro to define your testing functions. 
@@ -167,17 +171,42 @@ const inline std::map<ConsoleColor,String> color_code // can't constexpr sadly
     {ConsoleColor::White, "37m"},
 };
 
+// Some code are probably wrong here
+const inline std::map<ConsoleColor,int> win_color_code 
+{
+    {ConsoleColor::Black,   1}, 
+    {ConsoleColor::Red,     4},
+    {ConsoleColor::Green,   2},
+    {ConsoleColor::Yellow,  14},
+    {ConsoleColor::Blue,    5},
+    {ConsoleColor::Magenta, 6},
+    {ConsoleColor::Cyan,    3},
+    {ConsoleColor::White,   8},
+};
+
 /*!
  * @brief Just a shortcut so I don't have to write std::cout<< text << "\n" all the time
  */
 inline void write_line(const String& str)
 {
-    std::cout<<"\033[0;"<<color_code.at(current_color)<<str.c_str()<<" \033[0m"<<std::endl;
+    #ifdef _WIN32
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        SetConsoleTextAttribute(hConsole, win_color_code.at(current_color));  
+        std::cout<<str.c_str()<<std::endl;
+    #else
+        std::cout<<"\033[0;"<<color_code.at(current_color)<<str.c_str()<<"\033[0m"<<std::endl;
+    #endif
 }
 
 inline void write(const String& str)
 {
-    std::cout<<"\033[0;"<<color_code.at(current_color)<<str.c_str()<<" \033[0m"<<std::flush;
+    #ifdef _WIN32
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        SetConsoleTextAttribute(hConsole, win_color_code.at(current_color));  
+        std::cout<<str.c_str()<<std::flush;
+    #else
+        std::cout<<"\033[0;"<<color_code.at(current_color)<<str.c_str()<<"\033[0m"<<std::flush;
+    #endif
 }
 
 inline void write(const String& str, ConsoleColor code_color)
