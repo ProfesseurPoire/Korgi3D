@@ -20,3 +20,5 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     $<INSTALL_INTERFACE:../>)
 
 target_link_libraries(${PROJECT_NAME} corgi-containers corgi-memory corgi-string corgi-logger)
+
+add_subdirectory(tests)
