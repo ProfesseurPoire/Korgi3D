@@ -2,6 +2,17 @@ cmake_minimum_required(VERSION 3.13.0)
 
 project(corgi-math LANGUAGES CXX VERSION 1.0.0 )
 
+set(target_name ${PROJECT_NAME})
+
+set(CMAKE_DEBUG_POSTFIX d)
+
+# We'll install the library in lib64 if we're in x64, in lib otherwise
+if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(arch_suffix "")
+else()
+    set(arch_suffix "64")
+endif()
+
 # Not really sure what this does already haha
 #set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS TRUE)
 
@@ -11,8 +22,50 @@ add_subdirectory(src)
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
-target_include_directories(${PROJECT_NAME} PUBLIC 
+target_include_directories(${PROJECT_NAME} 
+PUBLIC 
 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-$<INSTALL_INTERFACE:./../>)
+$<INSTALL_INTERFACE:lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/include/>)
 
-add_subdirectory(tests)
+#####################################################
+# Installing the library and exporting the targets
+#####################################################
+
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(${target_name}ConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+install(TARGETS ${target_name} EXPORT ${target_name}-target
+    LIBRARY     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/
+    ARCHIVE     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/
+    RUNTIME     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/
+    INCLUDES    DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/include)
+
+install(
+    EXPORT  ${target_name}-target
+    DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/cmake
+)
+
+configure_file(cmake/config.cmake.in ${target_name}Config.cmake @ONLY)
+
+# Installs the config and config version file 
+install(
+    FILES 
+    "${CMAKE_CURRENT_BINARY_DIR}/${target_name}Config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${target_name}ConfigVersion.cmake"  
+    DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/cmake
+)
+
+# Installing header files
+install(
+    DIRECTORY include/
+    DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/include
+    FILES_MATCHING PATTERN *.h)
+
+    
+#########################################
+# Tests
+#########################################
+#add_subdirectory(tests)

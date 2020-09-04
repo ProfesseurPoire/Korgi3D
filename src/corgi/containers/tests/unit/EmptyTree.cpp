@@ -25,34 +25,35 @@ protected:
     Tree<Component> tree;
 };
 
-TEST_F(TestEmptyTree, Size_EqualZero)
+TEST_F(TestEmptyTree, emplace_back_size_equals_one)
 {
-    assert_that(tree.children().size(), equals(0));
+    tree.emplace_back();
+    assert_that(tree.size(), equals(1));
 }
 
-TEST_F(TestEmptyTree, Empty_EqualsTrue)
+TEST_F(TestEmptyTree, empty_equals_true)
 {
-    assert_that(tree.children().empty(), equals(true));
+    assert_that(tree.empty(), equals(true));
 }
 
-TEST_F(TestEmptyTree, Emplace_ConstructOneComponentInPlace)
+TEST_F(TestEmptyTree, emplace_back_node_value_equals_3)
 {
     // Action
-    auto& a = tree.children().emplace_back();
+    auto& a = tree.emplace_back();
 
     // Assert
     assert_that(a.get().number, equals(3));
-    assert_that(tree.children().size(), equals(1));
-    assert_that(tree.children().empty(), equals(false));
+    assert_that(tree.size(), equals(1));
+    assert_that(tree.empty(), equals(false));
 }
 
 TEST_F(TestEmptyTree, children_emplace_parameter_pack)
 {
     // Action
-    auto& node = tree.children().emplace_back(14);
+    auto& node = tree.emplace_back(14);
 
     // Assert
     assert_that(node.get().number, equals(14));
-    assert_that(tree.children().size(), equals(1));
-    assert_that(tree.children().empty(), equals(false));
+    assert_that(tree.size(), equals(1));
+    assert_that(tree.empty(), equals(false));
 }

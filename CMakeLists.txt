@@ -13,13 +13,15 @@ SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/b)
 #add_subdirectory(tools/FontExporter)
 #add_subdirectory(tools/ResourcesPackager)
 
-#add_subdirectory(src/corgi/logger)
 #add_subdirectory(src/corgi/string)
 add_subdirectory(src/corgi/test)
 add_subdirectory(src/corgi/memory)
 add_subdirectory(src/corgi/containers)
 add_subdirectory(src/corgi/math)
-#add_subdirectory(src/corgi/ecs)
+add_subdirectory(src/corgi/logger)
+add_subdirectory(src/corgi/ecs)
+
+add_subdirectory(tests)
 
 #add_subdirectory(src/corgi/filesystem)
 #add_subdirectory(editor)

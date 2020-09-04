@@ -1,5 +1,5 @@
 target_sources(${PROJECT_NAME}
-    PUBLIC
+    PRIVATE
     Matrix.cpp
 	MathUtils.cpp
 	Ray.cpp

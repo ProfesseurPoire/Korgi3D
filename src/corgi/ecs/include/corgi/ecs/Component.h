@@ -1,13 +1,12 @@
 #pragma once
 
-#include <typeindex>
-
 namespace corgi
 {
 	class Entity;
+	class Scene;
 
 	/*!
-	 * @brief Components are data object attached to an entity and updated by systems
+	 * @brief Components are data object attached to an entity and updated by the systems
 	 */
 	class Component
 	{
@@ -17,25 +16,27 @@ namespace corgi
 
 	// Lifecycle
 
-		Component()=default;
-		Component(Entity& entity);
-		Component(Entity* entity);
-	
-		// No virtual destructor because we don't actually really
-		// use polymorphism since the components are stored in a pool
-		// of their type
+		Component(Entity* entity = nullptr);
+		virtual ~Component();
 
 	// Functions
+		
+		virtual Component* clone(Entity& e) { return nullptr; };
 
-		//[[nodiscard]] int id() const;
+		const Entity& entity()const;
 
-		// TODO :	this is hacky and basically only exist because I have a mechanism
-		//			where systems are made aware of new component pool on the fly
-		//			solution : manually add the component pools instead of having
-		//			this?
-		static const std::type_info& type() 
-		{
-			return typeid(Component);
-		}
+		[[nodiscard]] bool is_enabled() const;
+
+		void is_enabled(bool value);
+
+		[[nodiscard]]int id() const;
+
+		Entity& entity();
+		Entity* _entity = nullptr;	// 4 bytes
+
+	private:
+
+		bool is_enabled_ = true;
 	};
+
 }

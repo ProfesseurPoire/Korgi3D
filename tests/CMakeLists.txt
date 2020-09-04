@@ -18,7 +18,7 @@
 #set_property(TARGET UnitTests PROPERTY CXX_STANDARD 20)
 
 #add_subdirectory(data_alignment)
-add_subdirectory(multithreading)
-add_subdirectory(transform_system)
+#add_subdirectory(multithreading)
+#add_subdirectory(transform_system)
 add_subdirectory(ecs)
 #add_subdirectory(AutomatedTests)

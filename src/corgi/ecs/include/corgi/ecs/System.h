@@ -2,52 +2,30 @@
 
 namespace corgi
 {
-class AbstractComponentPool;
-class ComponentPools;
-class Scene;
 
-/*!
-	* @brief	New Systems must inherits from this class and implement its
-	*			virtuals functions
-	*			// TODO : Systems could also always take a corgi::ComponentPools thing?
-	*/
-class AbstractSystem
-{
-public:
-
-// Friend classes
-
-	friend class Scene;
-	friend class ComponentPools;
-
-// Lifecycle
-
-	AbstractSystem(Scene&  scene) : 
-		scene_(scene)
-	{
-			
-	}
-
-// Virtual functions
-
-	virtual ~AbstractSystem() = default;
-
-protected :
-
-// Virtual functions
-
+	class AbstractComponentPool;
+	
 	/*!
-		* @brief 	Will be called everytime a new component pool is created by 
-		* 			the ECS
-		*/
-	virtual void on_new_component_pool(AbstractComponentPool* pool){}
+	 * @brief	New Systems will have to inherit from this class and implement its
+	 *			virtual functions
+	 */
+	class AbstractSystem
+	{
+	public:
 
-	virtual void before_update(){}
-	virtual void update(){}
-	virtual void after_update(){}
+		friend class Scene;
+		friend class ComponentPools;
 
-// Member variables 
+		AbstractSystem() = default;
+		virtual ~AbstractSystem() {}
 
-	Scene& scene_;
-};
+	protected :
+
+		/*!
+		 * @brief Will be called everytime a new component pool is created by the ECS
+		 */
+		virtual void on_new_component_pool(AbstractComponentPool* pool){}
+
+		virtual void update() = 0;
+	};
 }

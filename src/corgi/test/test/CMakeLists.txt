@@ -12,7 +12,9 @@ target_sources(test-corgi-test
        TestB.cpp
        TestTime.cpp)
 
-target_link_libraries(test-corgi-test corgiTest)
+find_package(CorgiTest)
+
+target_link_libraries(test-corgi-test CorgiTest)
 
 set_property(TARGET test-corgi-test  PROPERTY CXX_STANDARD 20)
 

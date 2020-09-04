@@ -9,10 +9,6 @@
 #include <functional>
 #include <memory>
 #include <sstream>
- 
- #ifdef _WIN32
-    #include <windows.h>   
-#endif
 
 /*!
  * @brief      Provides a framework to make test driven development easier
@@ -62,11 +58,11 @@ public:
     virtual void tear_down(){}
     virtual ~Test()=default;
 
-
 private:
 
     String _class_name;
     String _test_name;
+    
     /*!
      * @brief Overriden by the TEST_F macro
      */
@@ -189,24 +185,12 @@ const inline std::map<ConsoleColor,int> win_color_code
  */
 inline void write_line(const String& str)
 {
-    #ifdef _WIN32
-        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        SetConsoleTextAttribute(hConsole, win_color_code.at(current_color));  
-        std::cout<<str.c_str()<<std::endl;
-    #else
-        std::cout<<"\033[0;"<<color_code.at(current_color)<<str.c_str()<<"\033[0m"<<std::endl;
-    #endif
+    std::cout<<"\033[0;"<<color_code.at(current_color)<<str.c_str()<<"\033[0m"<<std::endl;
 }
 
 inline void write(const String& str)
 {
-    #ifdef _WIN32
-        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        SetConsoleTextAttribute(hConsole, win_color_code.at(current_color));  
-        std::cout<<str.c_str()<<std::flush;
-    #else
-        std::cout<<"\033[0;"<<color_code.at(current_color)<<str.c_str()<<"\033[0m"<<std::flush;
-    #endif
+    std::cout<<"\033[0;"<<color_code.at(current_color)<<str.c_str()<<"\033[0m"<<std::flush;
 }
 
 inline void write(const String& str, ConsoleColor code_color)
@@ -261,20 +245,20 @@ void assert_that_(T val, U&& checker,const String& value, const String& expected
 }
 
 /*!
-    @brief      Register a test function
-    Called by the TEST macro.  The TEST macro declares a function 
-    that will be named from the combination of the @ref group_name and @ref
-    function_name parameters.
-    Then, it will create a unique variable whose only goal is to call
-    the register_function with a pointer to the previously declared function, along
-    with the function name and the group (parameters of the TEST macro)
-    Finally, it will start the function definition.
-    @param func             Pointer to the test function created by the TEST macro
-    @param group_name       First parameter of the TEST macro. Correspond to the group
-    in which the function belong
-    @param function_name    Second parameter of the TEST macro. Correspond to the 
-    function name.
-*/
+ * @brief      Register a test function
+ *  Called by the TEST macro.  The TEST macro declares a function 
+ *  that will be named from the combination of the @ref group_name and @ref
+ *  function_name parameters.
+ *  Then, it will create a unique variable whose only goal is to call
+ *  the register_function with a pointer to the previously declared function, along
+ *  with the function name and the group (parameters of the TEST macro)
+ *  Finally, it will start the function definition.
+ *  @param func             Pointer to the test function created by the TEST macro
+ *  @param group_name       First parameter of the TEST macro. Correspond to the group
+ *                          in which the function belong
+ *  @param function_name    Second parameter of the TEST macro. Correspond to the 
+ *  function name.
+ */
 inline int register_function(TestFunctionPointer func_ptr,const String& function, const String& group)
 {
     map_test_functions[group].emplace_back(func_ptr,function,group);
@@ -282,8 +266,8 @@ inline int register_function(TestFunctionPointer func_ptr,const String& function
 }
 
 /*!
-    @brief Register a fixture object
-*/
+ *   @brief Register a fixture object
+ */
 template<class T>
 inline int register_fixture(const String& class_name, const String& test_name)
 {
@@ -338,12 +322,12 @@ inline void log_failure()
 }
 
 /*!
-    @brief  Write an header in the console
-    @detail Just write something in that way inside the console
-    ***********
-    *   Text  *  
-    ***********
-*/
+ *   @brief  Write an header in the console
+ *   @detail Just write something in that way inside the console
+ *   ***********
+ *   *   Text  *  
+ *   ***********
+ */
 inline void write_title(const String& text)
 {
     const int max_column = 78;
@@ -354,10 +338,10 @@ inline void write_title(const String& text)
 }
 
 /*!
-    @brief  Logs that we're running tests that belongs to the @ref group_name group
-    @param  group_name  Name of the tested group 
-    @param  group_size  How many test are inside the group
-*/
+ *   @brief  Logs that we're running tests that belongs to the @ref group_name group
+ *   @param  group_name  Name of the tested group 
+ *   @param  group_size  How many test are inside the group
+ */
 inline void log_start_group(const String& group_name, size_t group_size)
 {
     write_title("Running " + std::to_string(group_size) + " tests grouped in " + group_name);
@@ -476,8 +460,6 @@ inline int run_all()
         run_fixtures();
         run_functions();
         detail::log_results();
-       // detail::fixtures_map.clear();   // I wonder what actually happened ...
-                                        // If I clear the fixtures manually here, it won't die 
     }
     catch(const std::exception& e)
     {

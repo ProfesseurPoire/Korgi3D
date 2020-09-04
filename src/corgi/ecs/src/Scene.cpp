@@ -3,42 +3,43 @@
 
 namespace corgi
 {
-	//std::vector<std::unique_ptr<Canvas>>& Scene::canvas()
-	//{
-	//	return canvas_;
-	//}
+	static Scene main_scene;
+	
+	Scene::Scene()
+	{
+		root_.reset(new Entity(this));
+		root_->scene_ = this;
+	}
 
-	// void Scene::remove_entity(Entity& entity)
-	// {
-	// 	for(auto& component_pool : pools_)
-	// 	{
-	// 		component_pool.second->remove(entity.id_);
-	// 	}
-	// }
+	Scene::~Scene()
+	{
+	}
+
+	Entity* Scene::find(const std::string& name)
+	{
+		return root_->find(name);
+	}
+
+	std::vector<AbstractSystem*>& Scene::systems()
+	{
+		return systems_;
+	}
+
+	void Scene::remove_entity(Entity& entity)
+	{
+		for(auto& component_pool : pools_)
+		{
+			component_pool.second->remove(entity.id_);
+		}
+	}
 
 	void Scene::update(float elapsed_time)
 	{
-		for(auto& system : systems_)
+		for(auto* system : systems_)
 		{
-			system.second->update();
+			system->update();
 		}
 		_elapsed_time = elapsed_time;
-	}
-
-	void Scene::before_update(float elapsed_time)
-	{
-		for(auto& system : systems_)
-		{
-			system.second->before_update();
-		}
-	}
-
-	void Scene::after_update(float elapsed_time)
-	{
-		for(auto& system: systems_)
-		{
-			system.second->after_update();	
-		}
 	}
 
 	/*Canvas& Scene::new_canvas()
@@ -55,30 +56,47 @@ namespace corgi
 	{
 		canvas_.push_back(std::make_unique<Canvas>(canvas));
 	}*/
-	
-	
 
-	Entity& Scene::new_entity(const std::string& name)
+	Scene& Scene::main()
 	{
-		return root_->add_child(name);
+		return main_scene;
+	}
+	
+	Entity& Scene::new_entity(const std::string& name, EntityCreationFlag flags)
+	{
+		return main_scene.root_->add_child(name);
 	}
 	
 	Entity& Scene::new_entity(const Entity& entity)
 	{
 		auto e = new Entity(entity);
-		root_->add_child(e);
+		main_scene.root_->add_child(e);
 		return *e;
+	}
+
+	Entity& Scene::append(const std::string& name)
+	{
+		return main_scene.new_entity(name);
+	}
+
+	Entity& Scene::append(Entity* entity)
+	{
+		main_scene.root_->add_child(entity);
+		return *entity;
+	}
+
+	Entity& Scene::append(Entity&& entity)noexcept
+	{
+		return main_scene.root_->add_child(std::move(entity));
+	}
+
+	Entity& Scene::append(const Entity& entity)
+	{
+		return main_scene.root_->add_child(entity);
 	}
 
 	void Scene::clear()
 	{
-		if(root_) 	// There might not be any root. Btw I wonder if maybe I should just have a std::vector<Entity>
-					// instead of that. 
-		{
-			root_->clear();
-		}
-		
-		pools().clear();
-		systems().clear();
+		main_scene.root_->children().clear();
 	}
 }

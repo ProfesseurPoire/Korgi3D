@@ -22,11 +22,31 @@ using Reference = std::reference_wrapper<T>;
 namespace corgi
 {
 
-template<class T>
-class Tree;
+class AbstractNode
+{
+public:
 
-template<class T>
-class Node;
+// Lifecycle
+
+	AbstractNode(AbstractNode* parent) : parent_(parent){}
+
+// Functions
+
+	// The sfinae thing here should disable the function when T doesn't inherit from AbstractNode
+	template<class T,  std::enable_if_t<std::is_base_of<AbstractNode, T>::value>>	
+	void push_back(const T& node)
+	{
+		children_.push_back(std::make_unique<T>(node));
+	}
+
+
+protected:	
+
+	AbstractNode* parent_;
+	std::vector<std::unique_ptr<AbstractNode>> children_;
+
+	private:
+};
 
 template<class ... Args>
 class Event
@@ -35,6 +55,7 @@ public:
 	
 	template<class U>
 	void operator+=(U callback){callbacks_.emplace_back(callback);}
+	
 	void operator()(Args&& ... args)
 	{
 		std::for_each(callbacks_.begin(), callbacks_.end(), [&](auto& cb)
@@ -55,51 +76,147 @@ enum class IteratorMode :  char
 };
 
 template<class T>
-class TreeIterator
+class Node
 {
 public:
 
-	TreeIterator()=default;
+// Iterators
 
-	explicit TreeIterator(Tree<T>& tree, IteratorMode mode = IteratorMode::DepthFirst):
+class ConstNodeIterator
+{
+public:
+
+	using iterator_category = std::output_iterator_tag;
+	using value_type        = Node&;
+	using difference_type   = int;
+	using pointer           = Node*;
+	using reference         = Node&;
+
+// Lifecycle
+
+	ConstNodeIterator()=default;
+
+	explicit ConstNodeIterator(const Node& node, IteratorMode mode = IteratorMode::DepthFirst):
 		mode_(mode)
 	{
-		for(auto& n : tree.children().data())
+		for(auto& n : node.children_)
 		{
-		 	queue_.push_back(*n);
+			queue_.push_back(*n);
 		}
 		operator++();
 	}
 
-	explicit TreeIterator(Node<T>& node, IteratorMode mode = IteratorMode::DepthFirst):
+// Functions
+
+	[[nodiscard]] const Node<T>& operator*() noexcept{return *current_node_;}
+
+	void increment_breadth_first()
+	{
+		current_node_ = &queue_.front().get();
+		queue_.pop_front();
+		std::transform(current_node_->children_.begin(), current_node_->children_.end(), std::back_inserter(queue_),
+			[](std::unique_ptr<Node>& n)->Node&
+			{
+				return *n;
+			});
+	}
+
+	void increment_depth_first()
+	{
+		current_node_ = &queue_.front().get();
+		queue_.pop_front();
+		std::transform(current_node_->children_.rbegin(), current_node_->children_.rend(), std::front_inserter(queue_),
+			[](std::unique_ptr<Node>& n) ->Node&
+			{
+				return *n;
+			});
+	}
+
+	ConstNodeIterator& operator++() noexcept
+	{
+		if(queue_.empty())
+		{
+			current_node_=nullptr;
+			return *this;
+		}
+
+		switch(mode_)
+		{
+			case IteratorMode::BreadthFirst:
+				increment_breadth_first();
+			break;
+
+			case IteratorMode::DepthFirst:
+				increment_depth_first();
+			break;
+		}
+		return *this;
+	}
+
+	[[nodiscard]] bool operator!=(const ConstNodeIterator& iterator)const noexcept
+	{
+		return current_node_ != iterator.current_node_;
+	}
+
+private:
+
+	std::deque<Reference<const Node<T>>> queue_;
+	IteratorMode mode_      {IteratorMode::DepthFirst};
+	bool recursive_         {true};
+	const Node<T>* current_node_  {nullptr};
+};
+
+class NodeIterator
+{
+public:
+
+	using iterator_category = std::output_iterator_tag;
+	using value_type        = Node&;
+	using difference_type   = int;
+	using pointer           = Node*;
+	using reference         = Node&;
+
+	NodeIterator()=default;
+
+	explicit NodeIterator(Node& node, IteratorMode mode = IteratorMode::DepthFirst):
 		mode_(mode)
 	{
-		for(auto& n : node.children().data())
-		{
-		 	queue_.push_back(*n);
-		}
+		std::transform(node.children_.begin(), node.children_.end(), std::back_inserter(queue_),
+			[](std::unique_ptr<Node>& n)->Node& { return *n; });
 		operator++();
 	}
 
-	[[nodiscard]] Node<T>& operator*() noexcept{return *current_node_;}
+	[[nodiscard]] Node& operator*() noexcept{return *current_node_;}
 
-	void increment_breadth_first() noexcept
+	void increment_breadth_first()
 	{
 		current_node_ = &queue_.front().get();
 		queue_.pop_front();
-		auto& children = current_node_->children();
-		std::copy(children.begin(), children.end(), std::back_inserter(queue_));
+
+		std::transform
+		(
+			current_node_->children_.begin(),
+			current_node_->children_.end(),  
+			std::back_inserter(queue_),
+			[](std::unique_ptr<Node>& n)->Node&{return *n;}
+		);
 	}
 
-	void increment_depth_first()  noexcept
+	void increment_depth_first() 
 	{
 		current_node_ = &queue_.front().get();
 		queue_.pop_front();
-		auto& children= current_node_->children();
-		std::copy(children.rbegin(), children.rend(), std::front_inserter(queue_));
+
+		std::transform
+		(
+			current_node_->children_.rbegin(), 
+			current_node_->children_.rend(), 
+			std::front_inserter(queue_),
+			[](std::unique_ptr<Node>& n) ->Node&{return *n;}
+		);
 	}
 
-	TreeIterator& operator++() noexcept
+	NodeIterator& operator++() noexcept
 	{
 		if(queue_.empty())
 		{
@@ -119,7 +236,7 @@ public:
 		return *this;
 	}
 
-	[[nodiscard]] bool operator!=(const TreeIterator& iterator)const noexcept
+	[[nodiscard]] bool operator!=(const NodeIterator& iterator)const noexcept
 	{
 		return current_node_ != iterator.current_node_;
 	}
@@ -129,376 +246,213 @@ private:
 	std::deque<Reference<Node<T>>> queue_;
 	IteratorMode mode_      {IteratorMode::DepthFirst};
 	bool recursive_         {true};
-	Node<T>* current_node_  {nullptr};
+	Node* current_node_		{nullptr};
 };
-
-template<class T>
-class Children;
-
-// Mainly exist as for the emplace_back function that wraps the annoying
-// make_unique<Node> stuff
-template<class T>
-class Children
-{
-public:
-
-	friend class Node<T>;
 
 // Lifecycle
 
-	Children(Tree<T>& tree) :
-		tree_(tree){}
+public:
 
-	Children(Node<T>& parent) : 
-		parent_(&parent),
-		tree_(parent.tree_) {}
+	~Node() = default;
+
+	
+	Node():
+		parent_(nullptr){}
+	
+	template<class ... Args>
+	Node(Node* parent, Args&& ... args):
+		value_(std::forward<Args>(args)...),
+		parent_(parent)
+	{}
+
+	Node(const Node& node):
+		value_(node.value_)
+	{
+		for(auto& child : node.children_)
+		{
+			auto* new_node = new Node(*child);
+			new_node->parent_ = this;
+			children_.push_back(std::unique_ptr<Node>( new_node));
+		}
+	}
+
+	Node(Node&& node):
+		value_(std::move(node.value_)),
+		children_(std::move(node.children_))
+		
+	{
+		for (auto& child : children_)
+		{
+			child->parent_ = this;
+		}
+	}
+
+	//Node(Node&& node);
+
+	Node& operator=(const Node& node)
+	{
+		return *this;
+	}
+	
+	Node& operator=(Node&& node) noexcept
+	{
+		return *this;
+	}
+
 
 // Functions
 
-// So apparently I kinda have to make a ConstIterator class because
-// otherwise the thing complains when I try to copy a const Node<T>&
-class ConstIterator
-{
-public:
-
-	using iterator_category = std::output_iterator_tag;
-	using value_type        = Node<T>&;
-	using difference_type   = int;
-	using pointer           = Node<T>*;
-	using reference         = Node<T>&;
-
-	ConstIterator(const Children& children, int num, bool is_reversed):
-		children_(&children),
-		num_(num),
-		is_reversed_(is_reversed)
-	{}
-
-	ConstIterator& operator++()
+	void insert(int index, const T& value)
 	{
-		is_reversed_ ? --num_ : ++num_;
-		return *this;
+		children_.insert(children_.begin()+index, std::make_unique<Node>(value));
 	}
 
-	const Node<T>& operator*() const { return (*children_)[num_]; }
+	Node& push_back(const Node& node)
+	{
+		children_.push_back(std::make_unique<Node>(node));
+		children_.back()->parent_ = this;
+		return *children_.back();
+	}
 
-	bool operator==(const ConstIterator& iterator)const noexcept { return num_ == iterator.num_; }
-	bool operator!=(const ConstIterator& iterator)const noexcept { return num_ != iterator.num_; }
+	Node& push_back(Node&& node)
+	{
+		children_.push_back(std::make_unique<Node>(std::move(node)));
+		children_.back()->parent_ = this;
+		return *children_.back();
+	}
 
-private:
-		
-	const Children<T>* children_;
-	bool is_reversed_ = false;
-	int num_ = { -1 };
-};
+	constexpr Node& push_back(const T& value)
+	{
+		children_.push_back(std::make_unique<Node>(value));
+		children_.back()->parent_ = this;
+		return *children_.back();
+	}
+
+	constexpr Node& push_back(T&& value)
+	{
+		children_.push_back(std::make_unique<Node>(std::move(value)));
+		children_.back()->parent_ = this;
+		return *children_.back();
+	}
 	
-class Iterator
-{
-public:
-
-	// STL functions needs theses typedefs
-	using iterator_category = std::output_iterator_tag;
-	using value_type        = Node<T>;
-	using difference_type   = int;
-	using pointer           = Node<T>*;
-	using reference         = Node<T>&;
-
-	Iterator(Children& children, int num, bool is_reversed):
-		children_(&children),
-		num_(num),
-		is_reversed_(is_reversed)
-	{}
-
-	Iterator& operator++()noexcept
-	{
-		is_reversed_ ? --num_ : ++num_;
-		return *this;
-	}
-
-	[[nodiscard]] Node<T>& operator*()              { return (*children_)[num_]; }
-	[[nodiscard]] const Node<T>& operator*() const  { return (*children_)[num_]; }
-
-	[[nodiscard]] bool operator==(const Iterator& iterator) const noexcept{ return num_ == iterator.num_; }
-	[[nodiscard]] bool operator!=(const Iterator& iterator) const noexcept{ return num_ != iterator.num_; }
-
-private:
-
-	Children<T>* children_  {nullptr};
-	bool is_reversed_       {false};
-	int num_                { -1 };
-};
-
-	auto& data() { return children_; }
+	// TODO : 	If I ever become a SFINAE wizard, it would be nice to 
+	// 			disable the Node's variadic template constructor, because,
+	// 			currently, if you send a Node object to emplace_back, it 
+	// 			won't route it to the copy constructor, since the 
+	// 			copy constructor is a const reference, and is not picked
+	//			first 
 
 	/*!
 	 * @brief   Constructs and adds a new Node into the children's vector
 	 */
 	template<class ... Args>
-	Node<T>& emplace_back(Args&&... args)
+	Node& emplace_back(Args&&... args)
 	{
-		if(parent_)
-		{
-			return *children_.emplace_back(std::make_unique<Node<T>>(parent_, std::forward<Args>(args)...));
-		}
-		return *children_.emplace_back(std::make_unique<Node<T>>(tree_, std::forward<Args>(args)...));
+		return *children_.emplace_back(std::make_unique<Node>(this, std::forward<Args>(args)...));
 	}
 
-	bool push_back(Node<T>& node) 
-	{
-		if(node.is_parent(*parent_))
-		{
-			return false;
-		}
-
-		std::vector<std::unique_ptr<Node<T>>>* children{nullptr};
-		(node.parent())? children = &node.parent()->children().children_ : children = &tree_.children().children_;
-
-		auto it = std::find_if(children->begin(), children->end(), [&](const auto& a){return a.get()==&node;});
-		if(*it)
-		{
-			children_.push_back(std::make_unique<Node<T>>( *it->get()));
-			children_.front()->parent_ = parent_;
-			return true;
-		}
-		return false;
-	}
-
-	/*!
-	 * @brief   Moves a node as the child of the current node
-	 * 
-	 *          If the node you try to move is a parent of the current node, the
-	 *          operation fails and return false
-	 */
-	bool push_back(Node<T>&& node) 
-	{
-		if(node.is_parent(*parent_)) // Illegal, return error message
-		{
-			return false;
-		}
-
-		// Would love to have this be only 1 line
-		std::vector<std::unique_ptr<Node<T>>>* children{nullptr};
-		(node.parent())? children = &node.parent()->children().children_ : children = &tree_.children().children_;
-		
-		auto it = std::find_if(children->begin(), children->end(), [&](const auto& a){return a.get()==&node;});
-		if(it->operator bool())
-		{
-			auto index = it - children->begin() ;
-			children_.push_back(std::move((*it)));
-			children_.back()->parent_ = parent_; 
-			children->erase(children->begin()+index);
-			return true;
-		}
-		return false;
-	}
-
-	void clear()noexcept { children_.clear(); }
-
-	[[nodiscard]] Node<T>& operator[](int index) { return *children_[index]; }
-	[[nodiscard]] const Node<T>& operator[](int index)const { return *children_[index]; }
-
-	[[nodiscard]] Iterator begin() noexcept { return Iterator(*this, 0, false); }
-	[[nodiscard]] ConstIterator begin() const noexcept { return ConstIterator(*this, 0, false); }
-
-	[[nodiscard]] auto end() noexcept { return Iterator(*this, children_.size(), false); }
-	[[nodiscard]] ConstIterator end() const noexcept{return ConstIterator (*this, children_.size(), false);}
-
-	[[nodiscard]] auto rbegin() noexcept { return Iterator(*this, children_.size() - 1, true); }
-	[[nodiscard]] auto rbegin() const noexcept { return Iterator(*this, children_.size() - 1, true); }
-
-	[[nodiscard]] auto rend() noexcept { return Iterator(*this, -1, true); }
-	[[nodiscard]] auto rend() const noexcept { return Iterator(*this, -1, true); }
-
-	//  Capacity Functions
-
-	[[nodiscard]] constexpr bool empty()const noexcept { return children_.empty(); }
-	[[nodiscard]] size_t size()const noexcept { return children_.size(); }
 	[[nodiscard]] auto max_size()const noexcept { return  children_.max_size(); }
 	[[nodiscard]] auto capacity()const noexcept { return  children_.capacity(); }
-	void shrink_to_fit() noexcept { children_.capacity(); }
 
-private:
+	void shrink_to_fit() noexcept 				{ children_.capacity(); }
 
-	Tree<T>&   tree_;
-	Vector<std::unique_ptr<Node<T>>> children_;
-	// Can be optional because this is used by the tree too
-	Node<T>* parent_{nullptr};
-};
+	void clear() noexcept{ children_.clear();}
+	
+	auto& data() 			{ return children_; }
+	const auto& data()const { return children_;}
 
-template<class T>
-class Node
-{
-public:
+	[[nodiscard]] Node& 		operator[](int index) 		{ return *children_[index]; }
+	[[nodiscard]] const Node& 	operator[](int index)const 	{ return *children_[index]; }
 
-friend class Children<T>;
+	[[nodiscard]] bool empty() 	{ return children_.empty();}
+	[[nodiscard]] auto size()	{ return children_.size();}
 
-// Lifecycle
+	[[nodiscard]] bool is_parent(const Node& node) noexcept;
 
-	template<class ... Args>
-	explicit Node(Tree<T>& tree, Args&& ... args):
-		value_(std::forward<Args>(args)...),
-		tree_(tree),
-		children_(*this)
-	{
-		tree_.on_node_created_callback_(*this);
-	}
+	[[nodiscard]] auto begin(){return NodeIterator(*this, mode_);}
+	[[nodiscard]] auto begin()const noexcept{return ConstNodeIterator(*this, mode_);}
 
-	template<class ... Args>
-	explicit Node(Node<T>* parent, Args&& ... args):
-		value_(std::forward<Args>(args)...),
-		parent_(parent),
-		tree_(parent->tree_),
-		children_(*this)
-	{
-		tree_.on_node_created_callback_(*this);
-	}
-
-	Node(const Node<T>& node):
-		tree_(node.tree_),
-		children_(*this)
-	{
-		value_		= node.value_;
-
-		// Not a huge fan of this loop
-		for(const auto& child : node.children())
-		{
-			children_.children_.emplace_back(std::make_unique<Node>(child));
-		}
-	}
-
-	~Node()
-	{
-		tree_.on_node_removed_callback_(*this);
-	}
-
-	[[nodiscard]] bool is_parent(const Node& node) noexcept
-	{
-		if(!node.parent())
-		{
-			return false;
-		}
-		else
-		{
-			if(node.parent() == this)
-			{
-				return true;
-			}
-			else
-			{
-				return is_parent(*node.parent());
-			}
-		}
-	}
-
-	[[nodiscard]] auto begin(){return TreeIterator<T>(*this, mode_);}
-	[[nodiscard]] auto begin()const noexcept{return TreeIterator<T>(*this, mode_);}
-
-	[[nodiscard]] auto end()noexcept{return TreeIterator<T>();}
-	[[nodiscard]] auto end()const noexcept{return TreeIterator<T>();}
+	[[nodiscard]] auto end()noexcept{return NodeIterator();}
+	[[nodiscard]] auto end()const noexcept{return ConstNodeIterator();}
 
 	[[nodiscard]] bool is_leaf()const noexcept{return children_.empty();}
 
-	[[nodiscard]] Node<T>* parent() noexcept{ return parent_;}
-	[[nodiscard]] const Node<T>* parent()const noexcept{return parent_;}
+	[[nodiscard]] Node* parent() noexcept{ return parent_;}
+	[[nodiscard]] const Node* parent()const noexcept{return parent_;}
 
 	[[nodiscard]] T& get()noexcept{return value_;}
 	[[nodiscard]] const T& get()const noexcept{return value_;}
 
-	[[nodiscard]] Children<T>& children()noexcept{return children_;}
-	[[nodiscard]] const Children<T>& children()const noexcept{return children_;}
-
 	[[nodiscard]] T* operator->()noexcept{return &value_;}
 	[[nodiscard]] const T* operator->()const noexcept{return &value_;}
 
+	/*!
+	 * @brief 	Sets the Iterator's behavior
+	 */
 	void iterator_mode(IteratorMode mode)noexcept{mode_=mode;}
 
 	/*!
 	 * @brief 	Detach the current node from its parent
-	 * 
-	 * 			Basically reattach this node the tree root
-	 * 			Return false if you can't detach the node, true otherwise
 	 */
-	bool detach()noexcept
-	{
-		if(!parent_)
-		{
-			return false;
-		}
-		auto& c =  parent()->children().children_ ;
-
-		// TODO : 	maybe I could also store the index of the node into it's
-		// 			container so I don't have to std::find_if all the time
-		auto it = std::find_if(c.begin(), c.end(), [&](const auto& a){return a.get()==this;});
-
-		if(it->operator bool())
-		{
-			auto index = it - c.begin() ;
-			tree_.children().children_.push_back(std::move((*it)));
-			tree_.children().children_.back()->parent_=nullptr;
-			c.erase(c.begin()+index);
-			return true;
-		}
-		return true;
-	}
+	std::unique_ptr<Node> detach()noexcept;
 
 private:
 
-	Children<T>  children_;
-
 	T                       value_;
-	Node<T>*                parent_                 {nullptr};
-	Tree<T>&                tree_;	// Need a reference to the tree the node is part of
+	std::vector<std::unique_ptr<Node<T>>>  children_;
+	Node<T>*                parent_ {nullptr};
 
 	// This part is used to iterate the children nodes
 	IteratorMode            mode_                   {IteratorMode::DepthFirst};
 	bool                    recursive_iterator_     {true};
 };
 
-// Note : I can't make the Tree class constexpr because of std::vector
-template<class T>
-class Tree
-{
-	friend class Node<T>;
-	friend class Children<T>;
-
-public:
-
-	[[nodiscard]] Children<T>& children()noexcept;
-	[[nodiscard]] const Children<T>& children()const noexcept;
-
-	// So I know it might be a bit confusing, but you can actually
-	// iterate over the tree with depth/breadth first search enabled
-	[[nodiscard]] TreeIterator<T> begin() noexcept;
-	[[nodiscard]] TreeIterator<T> end() noexcept;
-	
-	void iterator_mode(IteratorMode mode)noexcept;
-
-	[[nodiscard]] auto& on_node_created_event()noexcept{return on_node_created_callback_;}
-	[[nodiscard]] auto& on_node_removed_event()noexcept{return on_node_removed_callback_;}
-	
-private:
-
-	Event<Node<T>&> on_node_created_callback_;
-	Event<Node<T>&> on_node_removed_callback_;
-
-	IteratorMode iterator_mode_{IteratorMode::DepthFirst};
-	bool recursive_iterator_{ true };
-	Children<T> children_{*this};
-};
-
 // Implementation
 
-template<class T>   
-Children<T>& Tree<T>::children()noexcept { return children_; }
+template<class T>
+[[nodiscard]] bool Node<T>::is_parent(const Node<T>& node) noexcept
+{
+	if(!node.parent())
+		return false;
+
+	if(node.parent() == this)
+		return true;
+
+	return is_parent(*node.parent());
+}
+
+//template<class T>
+//Node<T>::Node(const Node<T>& node):
+//	children_(node.children_, *this),
+//	value_(node.value_)
+//{}
 
 template<class T>
-const Children<T>& Tree<T>::children()const noexcept { return children_; }
+std::unique_ptr<Node<T>> Node<T>::detach()noexcept
+{
+	if(!parent_)		// If the current node has no parents
+		return nullptr;	// nothing happens and we exist the function
+
+	// Otherwise, we need to remove the node from it's parent's children vector
+	auto& c =  parent()->children_ ;
+
+	auto it = std::find_if(c.begin(), c.end(), [&](const auto& a){return a.get()==this;});
+
+	parent_= nullptr;
+
+	if(it->operator bool())	// If he found the node
+	{
+		auto index = it - c.begin() ;
+		auto* p = c[index].release();
+		c.erase(c.begin()+index);
+		return std::make_unique<Node<T>>(p);
+	}
+	
+	return nullptr;
+}
+
 
 template<class T>
-TreeIterator<T> Tree<T>::begin() noexcept { return TreeIterator<T>(*this, iterator_mode_); }
+using Tree = Node<T>;
 
-template<class T>
-TreeIterator<T> Tree<T>::end() noexcept { return TreeIterator<T>(); }
-
-template<class T>
-void Tree<T>::iterator_mode(IteratorMode mode) noexcept { iterator_mode_ = mode; }
 }

@@ -1,122 +1,126 @@
 #pragma once
 
 #include <corgi/ecs/System.h>
-#include <corgi/ecs/Systems.h>
-
 #include <corgi/ecs/ComponentPool.h>
 #include <corgi/ecs/ComponentPools.h>
-#include <corgi/ecs/Entities.h>
 
-#include <corgi/containers/TypeMap.h>
-#include <corgi/containers/Vector.h>
-#include <corgi/containers/Map.h>
-
-#include <corgi/memory/UniquePtr.h>
-
-#include <corgi/string/String.h>
-
-#include <optional>
+#include <vector>
+#include <memory>
+#include <string>
 
 namespace corgi
 {
-class Entity;
-
-/*!
- * @brief 	The goal of the scene object is to glue the different ECS elements
- * 			together. Thus, it stores entities, components and systems that
- * 			interact with each other
- */
-class Scene
-{
-public:
-
-// Functions
-
-	/*!
-	 * @brief 	Returns a reference to the System's container
-	 */
-	[[nodiscard]] Systems& systems()noexcept{ return systems_; }
-
-	/*!
-	 * @brief 	Returns a const reference to the System's container
-	 */
-	[[nodiscard]] const Systems& systems()const noexcept{return systems_;}
-
-	/*!
-	 * @brief 	Returns a reference to the Entity's container
-	 */
-	[[nodiscard]] Entities& entities()noexcept{return entities_;}
-
-	/*!
-	 * @brief 	Returns a const reference to the Entity's container
-	 */
-	[[nodiscard]] const Entities& entities()const noexcept{return entities_;}
-
-	/*!
-	 * @brief 	Returns a reference to the ComponentPool's containers
-	 */
-	[[nodiscard]] ComponentPools& pools()noexcept{return pools_;}
-
-	/*!
-	 * @brief 	Returns a const reference to the ComponentPool's containers
-	 */
-	[[nodiscard]]const ComponentPools& pools()const noexcept{return pools_;}
-
-	[[nodiscard]] float elapsed_time()const noexcept
-	{
-		return _elapsed_time;
-	}
-
-	//void remove_entity(Entity& entity);
-
-	void before_update(float elapsed_time);
-	void update(float elapsed_time);
-	void after_update(float elapsed_time);
-
-	// /*!
-	//  * @brief Use this to create a new entitiy
-	//  */
-	// Entity& new_entity(const String& name = "NewEntity");
-
-	// /*!
-	//  * @brief	Creates a copy of the given entity and attach it to the scene
-	//  */
-	// Entity& new_entity(const Entity& entity);
-
-	// /*!
-	//  * @brief	Appends a new Entity to the scene and returns a new reference to it
-	//  */
-	// Entity& append(const String& name = "NewEntity");
-
-	// Entity& append(Entity* entity);
-	// Entity& append(Entity&& entity)noexcept;
-	// Entity& append(const Entity& entity);
-
-	// /*!
-	//  * @brief	Removes and delete every entity attached to the scene and
-	//  * 			their components
-	//  * 			Also delete the systems and component pools
-	//  */
-	// void clear();
-
-	/*!
-	 * @brief 	Returns the canvas's container
-	 * 
-	 * @return 	Returns a reference to the std::vector<std::unique_ptr<Canvas>>
-	 */
-	//std::vector<std::unique_ptr<Canvas>>& canvas();
-
-	float _time_step;
-	float _elapsed_time = 0.0f;
+	class Entity;
 	
-	// Associate an entityId with an EntityPointer
-	//Map<int, Entity*> entities_;
+	class Scene
+	{
+	public:
 
-private:
+	// Constructors
 
-	//std::vector<std::unique_ptr<Canvas>> canvas_;
-	Systems systems_{*this};
-	Entities entities_ {*this};
-	ComponentPools pools_{systems_};
-};
+		Scene();
+		~Scene();
+		
+	// Functions
+
+		template<class T>
+		[[nodiscard]] T* system()
+		{
+			for(auto* sys : systems_)
+			{
+				if( dynamic_cast<T*>(sys))
+				{
+					return dynamic_cast<T*>(sys);
+				}
+			}
+			return nullptr;
+		}
+
+		void remove_entity(Entity& entity);
+
+		/*Entity* find_by_name(std::string name);
+		Entity* find_by_tag(std::string tag);*/
+
+		void update(float elapsed_time);
+
+		/*
+		 * @brief	This enum can be used to specify additional information on how to create
+		 *			a new entity 
+		 */
+		enum class EntityCreationFlag
+		{
+			Default,
+			NoTransform
+		};
+
+		/*!
+		 * @brief	By default a transform component is automatically added to the entity
+		 *			Use the EntityCreationFlag::NoTransform to creates one without transform
+		 */
+		static Entity& new_entity(const std::string& name = "NewEntity", 
+			EntityCreationFlag = EntityCreationFlag::Default);
+
+		/*!
+		 * @brief	Creates a copy of the given entity and attach it to the scene
+		 */
+		static Entity& new_entity(const Entity& entity);
+
+		/*!
+		 * @brief	Appends a new Entity to the scene and returns a new reference to it
+		 */
+		static Entity& append(const std::string& name = "NewEntity");
+
+		static Scene& main();
+
+		// TODO :	Since there can be more than 1 scene I'm not sure I should
+		//			keep the static functions
+		static Entity& append(Entity* entity);
+		static Entity& append(Entity&& entity)noexcept;
+		static Entity& append(const Entity& entity);
+
+		ComponentPools& pools()
+		{
+			return pools_;
+		}
+
+		/*!
+		 * @brief	Removes every entity attached to the scene
+		 */
+		static void clear();
+
+		/*!
+		 * @brief	Tries to find an entity called "name" inside the scene
+		 *			Returns a pointer to the entity if founded, returns nullptr 
+		 *			otherwise
+		 */
+		Entity* find(const std::string& name);
+
+		float elapsed_time()
+		{
+			return _elapsed_time;
+		}
+
+		Entity* root()
+		{
+			return  root_.get();
+		}
+
+		std::vector<AbstractSystem*>& systems();
+
+		// There will be a copy anyways 
+		/*void add_canvas(const Canvas& canvas);
+		void add_canvas(Canvas&& canvas);*/
+		//Canvas& new_canvas();
+
+		float _time_step;
+		float _elapsed_time = 0.0f;
+
+		//std::vector<std::unique_ptr<Canvas>> canvas_;
+
+	private:
+
+		std::vector<AbstractSystem*> systems_;
+		ComponentPools pools_ {systems_};
+		std::unique_ptr<Entity> root_;
+	};
 }

@@ -1,69 +1,55 @@
-cmake_minimum_required (VERSION 3.9.0)
+cmake_minimum_required (VERSION 3.13.0)
 
-project(corgiTest VERSION 1.0.0)
+project(CorgiTest VERSION 1.0.0)
 
-# # I basically build a second library version for the debug configuration
-# # This might not work if you generate a visual studio solution since
-# # multiconfig and whatnot but that'll do for now
-# if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-#     set(debug_suffix "d")
-# else()
-#     set(debug_suffix "")
-# endif()
+set(CMAKE_DEBUG_POSTFIX d)
 
-# # We'll install the library in lib64 if we're in x64, in lib otherwise
-# if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-#     set(arch_suffix "")
-# else()
-#     set(arch_suffix "64")
-# endif()
- #set(target_name ${PROJECT_NAME}${debug_suffix})
- set(target_name ${PROJECT_NAME})
+# We'll install the library in lib64 if we're in x64, in lib otherwise
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(arch_suffix "")
+else()
+    set(arch_suffix "64")
+endif()
 
-add_library(${target_name} INTERFACE)
+add_library(${PROJECT_NAME} INTERFACE)
 
-target_include_directories(${target_name}
+target_include_directories(${PROJECT_NAME}
 INTERFACE 
 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-$<INSTALL_INTERFACE:include>)
+$<INSTALL_INTERFACE:lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/include/>)
 
 #####################################################
 # Installing the library and exporting the targets
 #####################################################
 
-# include(CMakePackageConfigHelpers)
+include(CMakePackageConfigHelpers)
 
-# write_basic_package_version_file(${target_name}ConfigVersion.cmake
-#     VERSION ${PROJECT_VERSION}
-#     COMPATIBILITY SameMajorVersion)
+write_basic_package_version_file(${PROJECT_NAME}ConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion)
 
-# install(TARGETS ${target_name} EXPORT ${target_name}-target
-#     LIBRARY     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/
-#     ARCHIVE     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/
-#     RUNTIME     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/
-#     INCLUDES    DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/include)
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-target
+    LIBRARY     DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/
+    ARCHIVE     DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/
+    RUNTIME     DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/
+    INCLUDES    DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/include)
 
-# install(
-#     EXPORT  ${target_name}-target
-#     FILE    ${target_name}-target.cmake
-#     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/cmake
-# )
+install(
+    EXPORT  ${PROJECT_NAME}-target
+    DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/cmake)
 
-# configure_file(cmake/config.cmake.in ${target_name}Config.cmake @ONLY)
+configure_file(cmake/config.cmake.in ${PROJECT_NAME}Config.cmake @ONLY)
 
-# # Installs the config and config version file 
-# install(
-#     FILES 
-#     "${CMAKE_CURRENT_BINARY_DIR}/${target_name}Config.cmake"
-#     "${CMAKE_CURRENT_BINARY_DIR}/${target_name}ConfigVersion.cmake"  
-#     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/cmake
-# )
+# Installs the config and config version file 
+install(FILES 
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"  
+    DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/cmake)
 
-# # Installing header files
-# install(
-#     DIRECTORY include/
-#     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/include
-#     FILES_MATCHING PATTERN *.h)
+# Installing header files
+install(DIRECTORY include/
+    DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/include
+    FILES_MATCHING PATTERN *.h)
 
 #########################################
 # Tests
