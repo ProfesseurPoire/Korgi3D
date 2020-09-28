@@ -1,4 +1,5 @@
 #include <corgi/ecs/Entity.h>
+#include <corgi/ecs/Scene.h>
 
 #include <algorithm>
 
@@ -6,11 +7,35 @@ namespace corgi
 {
 	static int unique_id_ = 0;
 
-	Entity::Entity(Entity&& entity)noexcept
+// Lifecycle
+
+	Entity::Entity(Scene& scene, Entity* parent, const std::string& name) :
+	scene_(scene),parent_(parent),name_(name), id_(unique_id_++)
 	{
-		move(std::move(entity));
+		if(parent_)
+		{
+			depth_ = parent_->depth() + 1;
+		}
+		//scene_.entities().register_entity(id_, *this);
 	}
 
+	Entity::Entity(Scene& scene, const std::string& name)
+	: scene_(scene), name_(name), id_(unique_id_++)
+	{
+		//scene_.entities().register_entity(id_, *this);
+	}
+
+	Entity::Entity(const Entity& entity):
+		scene_(entity.scene_),
+		name_(entity.name_),
+		id_(unique_id_++)
+	{
+		
+		// Probably some stuff to do with the children too
+	}
+
+// Functions
+	
 	Entity* Entity::child(const std::string& name) noexcept
 	{
 		for (auto& child : children_)
@@ -26,66 +51,42 @@ namespace corgi
 	// TODO : THis is broken too lol
 	void Entity::copy(const Entity& e)
 	{
-		parent_ = e.parent_;
-		enabled_ = e.enabled_;
-		current_layer_ = e.current_layer_;
-		name_ = e.name_;
-		//transform_._entity = this;
+		// parent_ = e.parent_;
+		// enabled_ = e.enabled_;
+		// current_layer_ = e.current_layer_;
+		// name_ = e.name_;
+		// //transform_._entity = this;
 
-		// It's either that or have a virtual function in Components so :eyes:
-		/*for(auto& component : e._components)
-		{
-			_components.emplace(component.first, component.second->clone(*this));
-		}*/
+		// // It's either that or have a virtual function in Components so :eyes:
+		// /*for(auto& component : e._components)
+		// {
+		// 	_components.emplace(component.first, component.second->clone(*this));
+		// }*/
 
-		for (auto& child : e.children_)
-		{
-			children_.push_back(std::unique_ptr<Entity>(new Entity(*child)));
-		}
+		// for (auto& child : e.children_)
+		// {
+		// 	children_.push_back(std::unique_ptr<Entity>(new Entity(*child)));
+		// }
 	}
 
 	// TODO : THis is totally broken mdr
 	void Entity::move(Entity&& e)noexcept
 	{
-		parent_ = e.parent_;
-		tags = e.tags;
-		//_components			= std::move(e._components);
-		children_ = std::move(e.children_);
-		name_ = e.name_;
-		current_layer_ = e.current_layer_;
-		enabled_ = e.enabled_;
-		//transform_._entity	= this;
+		// parent_ = e.parent_;
+		// tags = e.tags;
+		// //_components			= std::move(e._components);
+		// children_ = std::move(e.children_);
+		// name_ = e.name_;
+		// current_layer_ = e.current_layer_;
+		// enabled_ = e.enabled_;
+		// //transform_._entity	= this;
 
-		/*for(auto& component : _components)
-		{
-			component.second.get()->_entity = this;
-		}*/
+		// /*for(auto& component : _components)
+		// {
+		// 	component.second.get()->_entity = this;
+		// }*/
 
-		e.parent_ = nullptr;
-	}
-
-	Entity::Entity(const Entity& entity)
-	{
-		copy(entity);
-	}
-
-	Entity& Entity::operator=(const Entity& entity)
-	{
-		copy(entity);
-		return *this;
-	}
-
-	Entity& Entity::operator=(Entity&& entity) noexcept
-	{
-		move(std::move(entity));
-		return *this;
-	}
-
-	// When we delete an entity, we must check if it has a parent, and remove the deleted
-	// entity from the 
-	Entity::~Entity()
-	{
-		scene_->remove_entity(*this);
+		// e.parent_ = nullptr;
 	}
 
 	int Entity::id()const noexcept
@@ -93,27 +94,44 @@ namespace corgi
 		return id_;
 	}
 
-	Entity* Entity::find(const std::string& name)
+	// Todo : update Entity for std::find and algorithms
+	std::optional<std::reference_wrapper<Entity>> Entity::find(const std::string& name)const
 	{
 		for (auto& child : children_)
 		{
 			if (child->name() == name)
 			{
-				return child.get();
+				return *child;
 			}
-
-			const auto r = child->find(name);
-			if (r)
+			auto v = child->find(name);
+			if(v!=std::nullopt)
 			{
-				return r;
+				return v;
 			}
 		}
-		return nullptr;
+		return std::nullopt;
+	}
+
+	std::optional<std::reference_wrapper<Entity>> Entity::find(int id)const
+	{
+		for (auto& child : children_)
+		{
+			if (child->id() == id)
+			{
+				return *child;
+			}
+			auto v = child->find(id);
+			if (v != std::nullopt)
+			{
+				return v;
+			}
+		}
+		return std::nullopt;
 	}
 
 	/*Behavior* Entity::behavior()
 	{
-		for (auto& pool : scene_->pools())
+		for (auto& pool : scene_->pools())fin
 		{
 			if (pool.second->has_component(id_))
 			{
@@ -146,29 +164,7 @@ namespace corgi
 					);
 	}
 
-	Entity::Entity(Scene* scene):
-		id_(unique_id_++),
-		scene_(scene)
-	{
-		scene_ = scene;
-	}
-
-	Entity::Entity(const std::string& name, Entity* parent)
-		: parent_(parent), name_(name), id_(unique_id_++)
-	{
-	}
-
-	Entity::Entity(Entity* parent, const std::string& name)
-		: parent_(parent), name_(name), id_(unique_id_++)
-	{
-		scene_ = parent->scene_;
-	}
-
-	Entity::Entity(Entity* parent, std::string&& name)
-		: parent_(parent), name_(name)
-	{
-		scene_ = parent->scene_;
-	}
+	
 
 	[[nodiscard]] const std::string& Entity::name()const
 	{
@@ -221,15 +217,14 @@ namespace corgi
 
 	Entity& Entity::add_child(const std::string& name) noexcept
 	{
-		auto entity = new Entity(this, name);
-		entity->scene_ = this->scene_;
-		//entity->add_component<Transform>();
+		auto entity = new Entity(scene_, this, name);
+		scene_.entities().register_entity(entity->id(), *entity);
 		return *children_.emplace_back(entity);
 	}
 
 	void Entity::remove_component(const std::type_info& component_type)
 	{
-		if (!scene_->pools().exists(component_type))
+		if (!scene_.pools().contains(component_type))
 		{
 			return;
 		}
@@ -239,18 +234,18 @@ namespace corgi
 			return;
 		}
 
-		scene_->pools().get(component_type)->remove(id_);
+		scene_.pools().get(component_type)->remove(id_);
 	}
 	
 	bool Entity::has_component(const std::type_info& component_type) const
 	{
 		// We first check if there's a pool that could hold the component 
-		if (!scene_->pools().exists(component_type))
+		if (!scene_.pools().contains(component_type))
 		{
 			return false;
 		}
 
-		return scene_->pools().get(component_type)->has_component(id_);
+		return scene_.pools().get(component_type)->has_component(id_);
 	}
 
 	/*const Transform& Entity::transform() const
@@ -317,32 +312,30 @@ namespace corgi
 
 	Scene& Entity::scene() noexcept
 	{
-		return *scene_;
+		return scene_;
 	}
 
-	void Entity::parent(Entity* newparent_)
+	void Entity::parent(Entity* new_parent)
 	{
-		if (!newparent_)
+		if (new_parent)
+		{
+			if (new_parent != parent_)
+			{
+				if (parent_)
+					detach_from_parent();
+
+				new_parent->add_child(this);
+				parent_ = new_parent;
+			}
+		}
+		else
 		{
 			if (parent_)
 			{
 				detach_from_parent();
 			}
-
-			// TODO : Check this out, I'm hacking a bit here
-			parent_ = scene().root();
-			scene().root()->add_child(this);
-		}
-		else
-		{
-			if (newparent_ != parent_)
-			{
-				if (parent_)
-					detach_from_parent();
-
-				newparent_->add_child(this);
-				parent_ = newparent_;
-			}
+			
+			parent_ = &scene().entities().root();
 		}
 	}
 

@@ -4,6 +4,7 @@
 #include <corgi/ecs/Scene.h>
 
 #include <corgi/components/StateMachine.h>
+#include <corgi/ecs/Entity.h>
 
 using namespace corgi;
 
@@ -25,12 +26,29 @@ void StateMachineSystem::after_update()
 
 void StateMachineSystem::update()
 {
-    auto& state_machines = *scene_.pools().get<StateMachine>();
+	auto opt_pool = scene_.pools().get<StateMachine>();
 
-    for(auto it  :  state_machines)
+	if(!opt_pool)
+	{
+		log_error("Could not find State Machine Component Pool");
+		return;
+	}
+
+    for(auto [entity_id, state_machine]  : opt_pool->get())
     {
-        auto& state_machine =  it.second;
-        auto& entity = *scene_.entities_[it.first];
+		auto opt_entity = scene_.entities()[entity_id];
+
+    	if(opt_entity->get().name()=="character")
+    	{
+			//std::cout << "lol";
+    	}
+    	if(!opt_entity)
+    	{
+			log_error("Could not find the entity attached to the component");
+			continue;
+    	}
+    	
+        auto& entity = opt_entity->get();
 
         // First we handle the transitions
 		for (auto& transition : state_machine.current_state().transitions_)
@@ -44,7 +62,8 @@ void StateMachineSystem::update()
 
 		if (state_machine.current_state_ != -1)
 		{
-			state_machine.current_state().on_update_(entity);
+			if(state_machine.current_state().on_update)
+				state_machine.current_state().on_update(entity);
 		}
     }
 }

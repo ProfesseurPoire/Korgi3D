@@ -17,6 +17,7 @@
 #include <corgi/rapidjson/rapidjson.h>
 #include <corgi/rapidjson/document.h>
 #include <corgi/rapidjson/filereadstream.h>
+#include <corgi/utils/TiledImporter.h>
 
 #include <map>
 #include <algorithm>
@@ -27,6 +28,7 @@ namespace corgi
 {
 	static std::map<std::string, Texture>	textures_;
 	static std::map<std::string, Material>	materials_;
+	static std::map<std::string, Editor::TiledImporter> tilemaps_;
 	static std::map<std::string, Font>		fonts_;
 	static std::map<std::string, Sound>		sounds_;
 
@@ -36,46 +38,6 @@ namespace corgi
 	static std::vector<std::string> directories_;
 
 	static Renderer* renderer_ = nullptr;	// Only the renderer can build textures
-
-	static std::map<std::string, Texture::Wrap> wraps = 
-	{
-		{"repeat", Texture::Wrap::Repeat},
-		{"clamp_to_border", Texture::Wrap::ClampToBorder},
-		{"clamp_to_edge", Texture::Wrap::ClampToEdge },
-		{"mirrored_repeat", Texture::Wrap::MirroredRepeat},
-		{"mirror_clamp_to_edge", Texture::Wrap::MirrorClampToEdge}
-	};
-	
-	static Texture::Wrap load_wrap(const std::string& str)
-	{
-		return wraps.at(str);
-	}
-
-	static std::map<std::string, Texture::MinFilter> min_filters_ =
-	{
-		{"nearest", Texture::MinFilter::Nearest},
-		{"linear", Texture::MinFilter::Linear},
-		{"nearest_mipmap_nearest", Texture::MinFilter::NearestMipmapNearest},
-		{"nearest_mipmap_linear", Texture::MinFilter::NearestMipmapLinear},
-		{"linear_mipmap_linear", Texture::MinFilter::LinearMipmapLinear},
-		{"linear_mipmap_nearest", Texture::MinFilter::LinearMipmapNearest}
-	};
-
-	static Texture::MinFilter parse_min_filter(const std::string& str)
-	{
-		return min_filters_.at(str);
-	}
-
-	static std::map<std::string, Texture::MagFilter> mag_filters =
-	{
-		{"nearest", Texture::MagFilter::Nearest},
-		{"linear", Texture::MagFilter::Linear}
-	};
-
-	static Texture::MagFilter parse_mag_filter(const std::string& str)
-	{
-		return mag_filters.at(str);
-	}
 
 	static void load_texture(const std::string& path)
 	{
@@ -158,8 +120,11 @@ namespace corgi
 		for (std::string& d : directories_)
 		{
 			std::string fullpath = d + "/" + path;
+			
 			if (filesystem::file_exist(fullpath.c_str()))
+			{
 				return fullpath;
+			}
 		}
 		log_error("The application could not find a file at \"" + path + "\" in its resource directories");
 		return "";
@@ -285,16 +250,16 @@ void ResourcesLoader::finalize()
 	// easier to find it inside the console
 	log_warning("Start cleaning up ResourcesLoader");
 		
-	log_message("Cleaning up textures");
+	log_info("Cleaning up textures");
 	textures_.clear();
 
-	log_message("Cleaning up materials");
+	log_info("Cleaning up materials");
 	materials_.clear();
 
-	log_message("Cleaning up directories");
+	log_info("Cleaning up directories");
 	directories_.clear();
 
-	log_message("Cleaning up fonts");
+	log_info("Cleaning up fonts");
 	fonts_.clear();
 	log_warning("Finished cleaning up ResourcesLoader");
 }

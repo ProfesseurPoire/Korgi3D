@@ -3,11 +3,145 @@
 #include <corgi/rendering/RenderCommand.h>
 #include <corgi/logger/log.h>
 
+#include <corgi/rapidjson/rapidjson.h>
+#include <corgi/rapidjson/document.h>
+#include <corgi/rapidjson/filereadstream.h>
+
+#include <corgi/utils/Utils.h>
+
 using namespace corgi;
 
 Texture::Texture()
 {
-	log_message("Creating new empty texture");
+	log_info("Creating new empty texture");
+}
+
+static Texture::MagFilter parse_mag_filter(const std::string& str)
+{
+	return mag_filters.at(str);
+}
+
+static std::map<std::string, Texture::MagFilter> mag_filters =
+{
+	{"nearest", Texture::MagFilter::Nearest},
+	{"linear", Texture::MagFilter::Linear}
+};
+
+static std::map<std::string, Texture::Wrap> wraps = 
+{
+	{"repeat", Texture::Wrap::Repeat},
+	{"clamp_to_border", Texture::Wrap::ClampToBorder},
+	{"clamp_to_edge", Texture::Wrap::ClampToEdge },
+	{"mirrored_repeat", Texture::Wrap::MirroredRepeat},
+	{"mirror_clamp_to_edge", Texture::Wrap::MirrorClampToEdge}
+};
+	
+static Texture::Wrap load_wrap(const std::string& str)
+{
+	return wraps.at(str);
+}
+
+static std::map<std::string, Texture::MinFilter> min_filters_ =
+{
+	{"nearest", Texture::MinFilter::Nearest},
+	{"linear", Texture::MinFilter::Linear},
+	{"nearest_mipmap_nearest", Texture::MinFilter::NearestMipmapNearest},
+	{"nearest_mipmap_linear", Texture::MinFilter::NearestMipmapLinear},
+	{"linear_mipmap_linear", Texture::MinFilter::LinearMipmapLinear},
+	{"linear_mipmap_nearest", Texture::MinFilter::LinearMipmapNearest}
+};
+
+static Texture::MinFilter parse_min_filter(const std::string& str)
+{
+	return min_filters_.at(str);
+}
+
+Texture::Texture(const std::string& path)
+{
+	if (!path.empty())
+	{
+		// So apparently this is where I actually 
+		std::ifstream file(path.c_str(), std::ifstream::in | std::ifstream::binary);
+
+		int fileSize = 0;
+
+		if(!file.is_open())
+		{
+			throw("Could not open file for texture");
+		}
+
+		if (file.is_open())
+		{
+			file.seekg(0, std::ios::end);
+			fileSize = int(file.tellg());
+			file.close();
+		}
+
+		FILE* fp = fopen(path.c_str(), "rb"); // non-Windows use "r"
+
+		char* readBuffer = new char[fileSize];
+
+		rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
+		rapidjson::Document document;
+		document.ParseStream(is);
+
+		assert(document.HasMember("wrap_s"));
+		assert(document.HasMember("wrap_t"));
+		assert(document.HasMember("min_filter"));
+		assert(document.HasMember("mag_filter"));
+
+		corgi::Image* image = Editor::Utils::LoadImageForReal(
+			(path.substr(0, path.size() - 4) + ".png").c_str());
+
+		name_ 	= filesystem::filename((path.substr(0, path.size() - 4) + ".png"));
+		width_ 	= image->width();
+		height_ = image->height();
+		
+		min_filter_ = parse_min_filter(document["min_filter"].GetString());
+		mag_filter_ = parse_mag_filter(document["mag_filter"].GetString());
+
+		wrap_s_ 	= load_wrap(document["wrap_s"].GetString());
+		wrap_t_		= load_wrap(document["wrap_t"].GetString());
+
+		id_ 		= RenderCommand::generate_texture_object();
+
+		RenderCommand::bind_texture_object(id_);
+
+		if (image->channel() == 3)
+		{
+			RenderCommand::initialize_texture_object
+			(
+				Format::RGB, InternalFormat::RGB,
+				width_, height_,
+				DataType::UnsignedByte,
+				image->pixels()
+			);
+		}
+
+		if (image->channel() == 4)
+		{
+			RenderCommand::initialize_texture_object
+			(
+				Format::RGBA, InternalFormat::RGBA,
+				width_, height_,
+				DataType::UnsignedByte,
+				image->pixels()
+			);
+		}
+
+		RenderCommand::texture_parameter(min_filter_);
+		RenderCommand::texture_parameter(mag_filter_);
+		RenderCommand::texture_wrap_s(wrap_s_);
+		RenderCommand::texture_wrap_t(wrap_t_);
+		RenderCommand::end_texture();	
+
+		delete image;
+	}
+	else
+	{
+		throw("Could not construstruct the thing");
+	}
+	
 }
 
 Texture::Texture(Texture&& texture) noexcept
@@ -21,7 +155,7 @@ Texture::Texture(Texture&& texture) noexcept
 		width_(texture.width_),
 		height_(texture.height_)
 {
-	log_message("Texture Move Constructor for "+ name_);
+	log_info("Texture Move Constructor for "+ name_);
 
 	texture.id_			= 0u;
 	texture.width_		= static_cast<unsigned short>(0);
@@ -34,7 +168,7 @@ Texture::Texture(Texture&& texture) noexcept
 
 Texture& Texture::operator=(Texture&& texture) noexcept
 {
-	log_message("Move Affectation texture for "+ name_);
+	log_info("Move Affectation texture for "+ name_);
 
 	if(id_!=0)
 		RenderCommand::delete_texture_object(id_);
@@ -81,7 +215,7 @@ Texture::Texture(
 		height_(static_cast<unsigned short>(height))
 	{
 
-	log_message("Texture Constructor for "+name);
+	log_info("Texture Constructor for "+name);
 
 	RenderCommand::bind_texture_object(id_);
 	RenderCommand::initialize_texture_object
@@ -103,7 +237,7 @@ Texture::Texture(
 
 Texture::~Texture()
 {
-	log_message("Texture Destructor for "+name_);
+	log_info("Texture Destructor for "+name_);
 	RenderCommand::delete_texture_object(id_);
 }
 

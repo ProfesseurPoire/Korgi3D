@@ -27,7 +27,7 @@ namespace corgi::logger
 
 #if CORGI_VERBOSITY <= 1
 #define log_trace(text)             logger::log(text, corgi::logger::LogLevel::Trace, __LINE__, __FILE__, __func__ , "default")
-#define log_trace_on(test, channel) logger::log(text, corgi::logger::LogLevel::Trace, __LINE__, __FILE__, __func__ , channel)
+#define log_trace_on(text, channel) logger::log(text, corgi::logger::LogLevel::Trace, __LINE__, __FILE__, __func__ , channel)
 #else
 #define log_trace(text) 
 #define log_trace_on(test, channel)
@@ -35,7 +35,7 @@ namespace corgi::logger
 
 #if CORGI_VERBOSITY <= 2
 #define log_debug(text)             logger::log(text, corgi::logger::LogLevel::Debug, __LINE__, __FILE__, __func__ , "default")
-#define log_debug_on(test, channel) logger::log(text, corgi::logger::LogLevel::Debug, __LINE__, __FILE__, __func__ , channel)
+#define log_debug_on(text, channel) logger::log(text, corgi::logger::LogLevel::Debug, __LINE__, __FILE__, __func__ , channel)
 #else
 #define log_debug(text) 
 #define log_debug_on(test, channel)
@@ -43,7 +43,7 @@ namespace corgi::logger
 
 #if CORGI_VERBOSITY <= 3
 #define log_warning(text)             logger::log(text, corgi::logger::LogLevel::Warning, __LINE__, __FILE__, __func__ , "default")
-#define log_warning_on(test, channel) logger::log(text, corgi::logger::LogLevel::Warning, __LINE__, __FILE__, __func__ , channel)
+#define log_warning_on(text, channel) logger::log(text, corgi::logger::LogLevel::Warning, __LINE__, __FILE__, __func__ , channel)
 #else
 #define log_warning(text) 
 #define log_warning_on(test, channel)
@@ -51,7 +51,7 @@ namespace corgi::logger
 
 #if CORGI_VERBOSITY <= 4
 #define log_error(text)             logger::log(text, corgi::logger::LogLevel::Error, __LINE__, __FILE__, __func__ , "default")
-#define log_error_on(test, channel) logger::log(text, corgi::logger::LogLevel::Error, __LINE__, __FILE__, __func__ , channel)
+#define log_error_on(text, channel) logger::log(text, corgi::logger::LogLevel::Error, __LINE__, __FILE__, __func__ , channel)
 #else
 #define log_error(text) 
 #define log_error_on(test, channel)
@@ -59,7 +59,7 @@ namespace corgi::logger
 
 #if CORGI_VERBOSITY <= 5
 #define log_fatal_error(text)             logger::log(text, corgi::logger::LogLevel::FatalError, __LINE__, __FILE__, __func__ , "default")
-#define log_fatal_error_on(test, channel) logger::log(text, corgi::logger::LogLevel::FatalError, __LINE__, __FILE__, __func__ , channel)
+#define log_fatal_error_on(text, channel) logger::log(text, corgi::logger::LogLevel::FatalError, __LINE__, __FILE__, __func__ , channel)
 #else
 #define log_fatal_error(text) 
 #define log_fatal_error_on(test, channel)

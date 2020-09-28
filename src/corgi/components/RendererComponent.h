@@ -36,6 +36,7 @@ namespace corgi
 			
 		}
 
+		bool is_enabled_;
 
 		Material material = Material("empty");
 

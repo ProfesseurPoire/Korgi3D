@@ -234,31 +234,31 @@ TiledImporter::~TiledImporter()
 
 void TiledImporter::generate(corgi::Scene& scene, corgi::Texture* tileset)
 {
-	int it = 0;
-	// Generate a tilemap for every layer
-	for (auto& tile_layer : _tile_layers)
-	{
-		corgi::Entity& tm = scene.root()->add_child();
-		tm.name("tilemap");
+  int it = 0;
+  // Generate a tilemap for every layer
+  for (auto& tile_layer : _tile_layers)
+  {
+	  corgi::Entity& tm = scene.entities().root().add_child("");
+	  tm.name("tilemap");
 
-		tm.add_component<corgi::Transform>();
-		tm.add_component<corgi::Tilemap>();
+	  auto& transform	= tm.add_component<corgi::Transform>();
+	  auto& tilemap		= tm.add_component<corgi::Tilemap>();
 
-		tm.get_component<corgi::Transform>().position(0.0f, 0.0f, -2.0f);
-		auto& tilemap = tm.get_component<corgi::Tilemap>();
+	  transform.position(0.0f, 0.0f, -2.0f);
+	  
 
-		tilemap.depth			= (it++) * 0.21f;
-		tilemap._height			= tile_layer.height;
-		tilemap._width			= tile_layer.width;
+	  tilemap.depth			= (it++) * 0.21f;
+	  tilemap._height			= tile_layer.height;
+	  tilemap._width			= tile_layer.width;
 
-		tilemap.set_tileset(tileset,
-			_tileset_infos[0].tilewidth,
-			_tileset_infos[0].tileheight);
+	  tilemap.set_tileset(tileset,
+		  _tileset_infos[0].tilewidth,
+		  _tileset_infos[0].tileheight);
 
-		tilemap._x				= 0;
-		tilemap._y				= 0;
-		tilemap.tiles			= tile_layer.data;
-	}
+	  tilemap._x				= 0;
+	  tilemap._y				= 0;
+	  tilemap.tiles			= tile_layer.data;
+  }
 }
 
 }

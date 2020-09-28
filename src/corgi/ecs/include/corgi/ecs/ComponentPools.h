@@ -1,71 +1,91 @@
 #pragma once
 
+#include <corgi/ecs/Systems.h>
 #include <corgi/ecs/System.h>
 #include <corgi/ecs/ComponentPool.h>
 
-#include <map>
-#include <vector>
-#include <memory>
+#include <corgi/containers/TypeMap.h>
+#include <corgi/containers/Map.h>
+
+#include <corgi/memory/UniquePtr.h>
+
 #include <typeindex>
+#include <optional>
 
 namespace corgi
 {
+	// TODO : Would have been nice to just use a TypeMap here but it has some repercussions in the code for now
 	class ComponentPools
 	{
 	public:
 
-		ComponentPools(std::vector<AbstractSystem*>& sys)
-			: systems_(sys){}
+		ComponentPools(Systems& sys) : systems_(sys) {}
 
 		/*!
 		 * @brief	Returns a non owning pointer to the component pool of type T.
 		 *			Returns nullptr if no pool of type T is stored inside the container
-		 *	
 		 */
 		template<class T>
-		[[nodiscard]] ComponentPool<T>* get()
+		[[nodiscard]] std::optional<std::reference_wrapper<ComponentPool<T>>>get()
 		{
-			if (!exists<T>())
+			// TODO : Maybe check if remove this and the cast and the
+			// std thing boost performance one day
+			if (!contains<T>())
+			{
+				return std::nullopt;
+			}
+			return *dynamic_cast<ComponentPool<T>*>(pools_.at(typeid(T)).get());
+		}
+
+		[[nodiscard]] AbstractComponentPool* get(const std::type_info& component_type)
+		{
+			if (!contains(component_type))
 			{
 				return nullptr;
 			}
-			return dynamic_cast<ComponentPool<T>*>(pools_.at(typeid(T)).get());
+			return pools_.at(component_type).get();
 		}
 
-		[[nodiscard]] AbstractComponentPool* get(const std::type_info& component_type);
-
 		/*!
-		 * @brief	Will try to add a new component pool of the specified type.
-		 *			If a component pool of the same type already exists, it won't
-		 *			construct it 
-		 */
+			* @brief	Will try to add a new component pool of the specified type.
+			*			If a component pool of the same type already exists, it won't
+			*			construct it
+			*/
 		template<class T>
-		void add(int size=0)
+		void add(int size = 0)
 		{
-			if(exists<T>())
+			// If there's already a component pool of type T, we skip this part
+			if (contains<T>())
 			{
 				return;
 			}
-			
+
 			auto it = pools_.emplace(typeid(T), new ComponentPool<T>(size));
 
 			// Register the new component_pool to systems
 			// Not sure it's really needed though
-			for (auto* system : systems_)
+			for (auto& system : systems_)	// This might be a slight pas 
 			{
-				system->on_new_component_pool( it.first->second.get());
+				// just assuming we have an object that inherits from AbstractComponentPool here
+				static_cast<AbstractSystem*>(system)->on_new_component_pool(it.first->second.get());
 			}
 		}
 
 		template<class T>
-		void remove(){remove(typeid(T));}
+		void remove() { remove(typeid(T)); }
 
 		template<class T>
-		[[nodiscard]] bool exists() const { return exists(typeid(T)); }
+		[[nodiscard]] bool contains() const noexcept { return contains(typeid(T)); }
 
-		
-		void remove(const std::type_info& component_type);
-		[[nodiscard]] bool exists(const std::type_info& component_type)const;
+		[[nodiscard]] bool contains(const std::type_info& component_type)const noexcept
+		{
+			return (pools_.count(component_type) != 0);
+		}
+
+		void remove(const std::type_info& component_type)
+		{
+			pools_.erase(component_type);
+		}
 
 		auto begin()
 		{
@@ -77,12 +97,21 @@ namespace corgi
 			return pools_.end();
 		}
 
-		[[nodiscard]] int size() const noexcept;
+		/*!
+			* @brief	Returns the number of elements in the container
+			*/
+		[[nodiscard]] auto size() const noexcept { return pools_.size(); }
+
+		/*!
+			* @brief	Erases all ComponentPool from the container
+			*
+			* 			After this call, size() will return 0
+			*/
+		void clear() noexcept { pools_.clear(); }
 
 	private:
 
-		std::map<std::type_index, std::unique_ptr<AbstractComponentPool>> pools_;
-		
-		std::vector<AbstractSystem*>& systems_;
+		Map<std::type_index, UniquePtr<AbstractComponentPool>> pools_;
+		Systems& systems_;
 	};
 }

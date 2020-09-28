@@ -39,20 +39,6 @@ namespace corgi
 		return transitions_.emplace_back(name);
 	}
 
-    Event<Entity&>& State::on_exit_event()
-    {
-		return on_exit_;
-    }
-
-    Event<Entity&>& State::on_enter_event()
-    {
-		return on_enter_;
-    }
-
-    Event<Entity&>& State::on_update_event()
-    {
-		return on_update_;
-    }
 
     void BlendTree::play()
 	{
@@ -208,10 +194,12 @@ namespace corgi
 	void StateMachine::transition_to(int state_id, Entity& entity)
 	{
 		transitioning_to_ = state_id;
-    	
-		states_[current_state_].on_exit_(entity);
+
+    	if(states_[current_state_].on_exit)
+			states_[current_state_].on_exit(entity);
 		current_state_ = state_id;
-		states_[current_state_].on_enter_(entity);
+    	if(states_[current_state_].on_enter)
+			states_[current_state_].on_enter(entity);
 	}
 
 	bool StateMachine::is_enabled()const

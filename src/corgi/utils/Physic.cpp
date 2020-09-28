@@ -34,6 +34,7 @@ namespace corgi
 		return raycast(ray.start, ray.direction, ray.length, layer_flag);
 	}
 
+	// TODO : Return std::optional since the thing can actually fail
 	const RaycastResult Physic::raycast(const Vec3& start, const Vec3& direction, float length, int_64 layer)
 	{
 		RaycastResult result;
@@ -46,46 +47,78 @@ namespace corgi
 		Vec3 intersection_normal;
 
 		float min_length = std::numeric_limits<float>::max();
-		
-		for (auto& collider : *Game::scene().pools().get<BoxCollider>())
-		{
-			auto& entity  = *Game::scene().entities_[collider.first];
 
-			if(! collider.second.is_enabled() || !entity.is_enabled() )
+		auto opt_collider_pool = Game::scene().pools().get<BoxCollider>();
+
+		if(!opt_collider_pool)
+		{
+			log_error("No Box Collider Pool");
+			return RaycastResult();
+		}
+
+		auto& collider_pool = opt_collider_pool->get();
+		
+		for (auto& collider_pair : collider_pool)
+		{
+			auto& collider_component = collider_pair.second;
+			
+			auto opt_entity  = Game::scene().entities()[collider_pair.first];
+
+			if(!opt_entity)
+			{
+				log_error("Could not find an entity attached to the Collider component");
+				continue;
+			}
+
+			auto& collider_entity = opt_entity->get();
+
+			if(! collider_component.is_enabled() || !collider_entity.is_enabled() )
 			{
 				continue;
 			}
 			
 			int_64 v = 1;
 
-			if ((( v << (collider.second._current_layer))& layer) != 0)
+			if ((( v << (collider_component._current_layer))& layer) != 0)
 			{
-				auto mesh = collider.second._mesh;
-				
-				if (
-					math::intersect_with_collider
+				// TODO : Shared_ptr? WTF?
+				auto mesh = collider_component._mesh;
+
+				auto opt_transform = collider_entity.get_component<Transform>();
+
+				if (opt_transform)
+				{
+
+					// TODO : I actually can find the inverse matrix directly
+					// inside the function btw KEK
+					if (math::intersect_with_collider
 					(
 						0,
-						3, 
-						entity.get_component<Transform>().world_matrix(),
-						entity.get_component<Transform>().world_matrix().inverse(),
+						3,
+						opt_transform->get().world_matrix(),
+									opt_transform->get().world_matrix().inverse(),
 						mesh->indexes(),
 						mesh->vertices().data(),
-						collider.second.normals,
+						collider_component.normals,
 						ray,
 						intersection_point, intersection_normal
 					)
-				)
-				{
-					if ((intersection_point - start).length() < min_length)
+						)
 					{
-						min_length = (intersection_point - start).length();
-						result.collision_occured	= true;
-						result.intersection_point	= intersection_point;
-						result.collider				= &collider.second;
-						result.intersection_normal	= intersection_normal;
-						result.entity				= &entity;
+						if ((intersection_point - start).length() < min_length)
+						{
+							min_length = (intersection_point - start).length();
+							result.collision_occured = true;
+							result.intersection_point = intersection_point;
+							result.collider = &collider_component;
+							result.intersection_normal = intersection_normal;
+							result.entity = &collider_entity;
+						}
 					}
+				}
+				else
+				{
+					log_error("You shit just add a transform");
 				}
 			}
 		}

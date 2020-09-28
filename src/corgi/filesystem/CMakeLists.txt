@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9.0)
 
-project(corgi-filesystem VERSION 1.0.0)
+project(CorgiFilesystem VERSION 1.0.0)
 
 
 if(MSVC)
@@ -15,7 +15,7 @@ add_library(${PROJECT_NAME} STATIC
 )
 
 
-set_property(TARGET corgi-filesystem PROPERTY CXX_STANDARD 20)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -23,5 +23,5 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
     
 target_link_libraries(${PROJECT_NAME}
-	corgi-string
+	CorgiString
 )

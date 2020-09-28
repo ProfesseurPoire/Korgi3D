@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.13.0)
 
-project(corgi-math LANGUAGES CXX VERSION 1.0.0 )
+project(CorgiMath LANGUAGES CXX VERSION 1.0.0 )
 
-set(target_name ${PROJECT_NAME})
 
 set(CMAKE_DEBUG_POSTFIX d)
 
@@ -25,7 +24,7 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 target_include_directories(${PROJECT_NAME} 
 PUBLIC 
 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-$<INSTALL_INTERFACE:lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/include/>)
+$<INSTALL_INTERFACE:lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/include/>)
 
 #####################################################
 # Installing the library and exporting the targets
@@ -33,35 +32,35 @@ $<INSTALL_INTERFACE:lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/include/
 
 include(CMakePackageConfigHelpers)
 
-write_basic_package_version_file(${target_name}ConfigVersion.cmake
+write_basic_package_version_file(${PROJECT_NAME}ConfigVersion.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion)
 
-install(TARGETS ${target_name} EXPORT ${target_name}-target
-    LIBRARY     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/
-    ARCHIVE     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/
-    RUNTIME     DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/
-    INCLUDES    DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/include)
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}-target
+    LIBRARY     DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/
+    ARCHIVE     DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/
+    RUNTIME     DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/
+    INCLUDES    DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/include)
 
 install(
-    EXPORT  ${target_name}-target
-    DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/cmake
+    EXPORT  ${PROJECT_NAME}-target
+    DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/cmake
 )
 
-configure_file(cmake/config.cmake.in ${target_name}Config.cmake @ONLY)
+configure_file(cmake/config.cmake.in ${PROJECT_NAME}Config.cmake @ONLY)
 
 # Installs the config and config version file 
 install(
     FILES 
-    "${CMAKE_CURRENT_BINARY_DIR}/${target_name}Config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/${target_name}ConfigVersion.cmake"  
-    DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"  
+    DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/cmake
 )
 
 # Installing header files
 install(
     DIRECTORY include/
-    DESTINATION lib${arch_suffix}/${target_name}-${PROJECT_VERSION}/include
+    DESTINATION lib${arch_suffix}/${PROJECT_NAME}-${PROJECT_VERSION}/include
     FILES_MATCHING PATTERN *.h)
 
     

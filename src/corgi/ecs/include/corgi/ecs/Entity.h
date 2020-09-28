@@ -1,13 +1,15 @@
 #pragma once
 
-#include <corgi/ecs/Component.h>
 #include <corgi/ecs/Scene.h>
 
 #include <string>
 #include <vector>
 #include <memory>
 #include <string>
-#include <typeindex>
+#include <optional>
+#include <functional>
+
+#include <corgi/logger/log.h>
 
 namespace corgi
 {
@@ -24,32 +26,26 @@ namespace corgi
 
 	public:
 
-		// Lifecycle
+	// Lifecycle
 
-		Entity(Scene* scene);
+		/*!
+		 * @brief Creates a new empty entity
+		 */
+		explicit Entity(Scene& scene, const std::string& name = "Unnamed");
+		explicit Entity(Scene& scene, Entity* parent, const std::string& name = "Unnamed");
 
-		// TODO : An entity should always reference a scene. So I don't really like the following constructors
-		// The problem lies in the fact that components vectors are initialized inside the scene object, and the entity needs to find them
-		//
-		// General idea being : If I need to load/initialize a new scene, I need my entity to be link to the scene they are going to be
-		// a part of, so you should really not be able to just create a new entity without referencing the scene
-		// that's also why you can do stuff like scene.new_entity("name");
+		explicit Entity(const Entity& entity);
+		
 
-		Entity(const std::string& name, Entity* parent = nullptr);
-		Entity(Entity* parent, const std::string& name);
-		Entity(Entity* parent, std::string&& name);
+		~Entity() = default;
 
-		~Entity();
-
-		//Copy/Move constructors/operators
-
-		Entity(Entity&& entity)noexcept;
-		Entity(const Entity& entity);
+		/*Entity(Scene& scene, Entity&& entity)noexcept;
+		Entity(Scene& scene, const Entity& entity);
 
 		Entity& operator=(const Entity& entity);
-		Entity& operator=(Entity&& entity)noexcept;
+		Entity& operator=(Entity&& entity)noexcept;*/
 
-		// Functions
+	// Functions
 
 			/*!
 			 * @brief	Returns the entity's unique identifier
@@ -131,7 +127,8 @@ namespace corgi
 		Entity& add_child(Entity&& entity)noexcept;
 
 		//Recursively tries to find an entity with the same name as the parameter
-		Entity* find(const std::string& name);
+		std::optional<std::reference_wrapper<Entity>> find(const std::string& name)const;
+		std::optional<std::reference_wrapper<Entity>> find(int id)const;
 
 		/*!
 		 * @brief	Should return a behavior attached to the entity
@@ -143,20 +140,14 @@ namespace corgi
 		 */
 		void update(Scene& scene);
 
-		/*!
-		 * @brief	Returns an "actual" reference to a component. Since the container storing
-		 *			the components can reallocate memory, using the Ref object is the only way
-		 *			to keep a reference to a specific component after reallocation
-		 */
-		template<class T>
-		Ref<T> get_ref()
-		{
-			if (!scene_->pools().exists<T>())
-			{
-				//return false;
-			}
 
-			return scene_->pools().get<T>()->get_ref(id_);
+		template<class T>
+		void check_if_pool_exist()
+		{
+			if (!scene_.pools().contains<T>())
+			{
+				scene_.pools().add<T>();
+			}
 		}
 
 		/*!
@@ -170,22 +161,21 @@ namespace corgi
 		template<class T>
 		void move_component(T&& component)
 		{
-			if(!scene_->pools().exists<T>())
-			{
-				scene_->pools().add<T>();
-			}
+			check_if_pool_exist<T>();
 
 			auto& e = component.entity();
+
+			auto& pool = scene_.pools().get<T>()->get();
 			
-			if(scene_->pools().get<T>()->has_component(id_))
+			if(pool.has_component(id_))
 			{
-				auto* comp = dynamic_cast<T*>(scene_->pools().get<T>()->at_id(id_));
+				auto* comp = dynamic_cast<T*>(pool.at_id(id_));
 				(*comp) = std::move(component);
 				comp->_entity = this;
 			}
 			else
 			{
-				scene_->pools().get<T>()->add(id_, std::move(component));
+				scene_.pools().get<T>()->add(id_, std::move(component));
 			}
 			e.remove_component<T>();
 		}
@@ -193,63 +183,47 @@ namespace corgi
 		template<class T>
 		void copy_component(const T& component)
 		{
-			if (!scene_->pools().exists<T>())
-			{
-				scene_->pools().add<T>();
-			}
+			check_if_pool_exist<T>();
 
-			if (scene_->pools().get<T>()->has_component(id_))
+			if (scene_.pools().get<T>()->has_component(id_))
 			{
-				auto* comp = dynamic_cast<T*>(scene_->pools().get<T>()->at_id(id_));
+				auto* comp = dynamic_cast<T*>(scene_.pools().get<T>()->at_id(id_));
 				(*comp) = component;
 				comp->_entity = this;
 			}
 			else
 			{
-				scene_->pools().get<T>()->add(id_, component);
+				scene_.pools().get<T>()->add(id_, component);
 			}
 		}
 
-		template<class T, class ...Args>
-		T& add_component(Args ... args)
+		template<class T, class ... Args>
+		T& add_component(Args&& ... args)
 		{
-			// TODO :	This could be removed if we assume the user did initialized all the component pools
-			//			when creating the scene 
-			if (!scene_->pools().exists<T>())
+			if (!scene_.pools().contains<T>())
 			{
-				scene_->pools().add<T>();
+				scene_.pools().add<T>();
 			}
 
-			auto& component = scene_->pools().get<T>()->add_param(id_, std::forward<Args>(args)...);
-			component._entity = this;
-			return component;
-		}
-		
-		template<class T>
-		T& add_component()
-		{
-			// TODO :	This could be removed if we assume the user did initialized all the component pools
-			//			when creating the scene 
-			if (!scene_->pools().exists<T>())
+			auto& pool = scene_.pools().get<T>()->get();
+
+			// We then check if the pool already has a component of type T 
+			if (pool.has_component(id()))
 			{
-				scene_->pools().add<T>();
+				log_warning("The entity already has a component of type T associated with it");
+				return pool.get(id());
 			}
 
-			auto& component = scene_->pools().get<T>()->add(id_);
-			component._entity = this;
-			return component;
+			// Then we simply forward the parameters to the add_param function of our pool
+			return pool.add_param(*this, std::forward<Args>(args)...);
 		}
 
 		template<class T>
 		T& add_component(const T& copy)
 		{
-			if (!scene_->pools().exists<T>())
-			{
-				scene_->pools().add<T>();
-			}
+			check_if_pool_exist<T>();
 
-
-			auto& component = scene_->pools().get<T>()->add(id_, copy);
+			auto& component = scene_.pools().get<T>()->add(id_, copy);
 			component._entity = this;
 			return component;
 		}
@@ -257,14 +231,11 @@ namespace corgi
 		template<class T>
 		T& add_component(T&& copy)
 		{
-			if (!scene_->pools().exists<T>())
-			{
-				scene_->pools().add<T>();
-			}
+			check_if_pool_exist<T>();
 
 			auto& entity = copy.entity();
 			
-			auto& component = scene_->pools().get<T>()->add(id_, std::move(copy));
+			auto& component = scene_.pools().get<T>()->add(id_, std::move(copy));
 			component._entity = this;
 
 			entity.remove_component<T>();
@@ -282,46 +253,42 @@ namespace corgi
 		[[nodiscard]] bool has_component(const std::type_info& component_type)const;
 
 		template<class T>
-		T& get_component()
+		std::optional<std::reference_wrapper<T>> get_component()
 		{
-			if (!scene_->pools().exists<T>())
+			if (!scene_.pools().contains<T>())
 			{
-				//log_error("Boom");
-				throw;
+				return std::nullopt;
 			}
-
-			auto& pool = *scene_->pools().get<T>();
-
+			auto& pool = scene_.pools().get<T>()->get();
 			if (!pool.has_component(id_))
 			{
-				//log_error("Boom");
-				throw;
+				return std::nullopt;
 			}
-
 			return pool.get(id_);
 		}
 
-		
-
-		template<class T>
-		const T& get_component()const
+		// TODO : Maybe use a macro to be able to get the component name?
+		//#define get_c(type_name) \
+		//get_component<type_name>(#type_name)
+		//
+		/*template<class T>
+		std::optional<std::reference_wrapper<T>> get_component(const std::string& type_name)
 		{
-			if (!scene_->pools().exists<T>())
+			if (!scene_.pools().contains<T>())
 			{
-				//log_error("Boom");
-				throw;
+				log_warning("No component pool of type "+ type_name);
+				return std::nullopt;
 			}
 
-			auto& pool = *scene_->pools().get<T>();
+			auto& pool = scene_.pools().get<T>()->get();
 
 			if (!pool.has_component(id_))
 			{
-				//log_error("Boom");
-				throw;
+				return std::nullopt;
 			}
 
 			return pool.get(id_);
-		}
+		}*/
 
 		void remove_component(const std::type_info& component_type);
 
@@ -329,6 +296,11 @@ namespace corgi
 		void remove_component()
 		{
 			remove_component(typeid(T));
+		}
+
+		[[nodiscard]] int depth()const
+		{
+			return depth_;
 		}
 
 		/*!
@@ -341,8 +313,11 @@ namespace corgi
 		const SpriteRenderer& sprite_renderer()const;
 		SpriteRenderer& sprite_renderer();*/
 
+	
+
 	private:
 
+		int depth_ = 0;
 		// Detach the current entity from its parent's children list
 		void detach_from_parent();
 
@@ -360,9 +335,7 @@ namespace corgi
 
 		int id_;
 
-		Scene* scene_ = nullptr;	// We need the reference to the scene to actually delete the entity and its attached components
-									// Although to be fair I could act as if there was only 1 scene and directly fetch it
-
+		Scene& scene_;
 		Entity* parent_ = nullptr;
 
 		std::vector<std::string> tags;

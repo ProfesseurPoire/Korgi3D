@@ -8,7 +8,7 @@ namespace corgi
 {
 	EntityPool::EntityPool(Entity* parent)
 	{
-		parent_ = &Game::scene().new_entity("EntityPool");
+		parent_ = &Game::scene().entities().emplace("EntityPool");
 	}
 
 	EntityPool::~EntityPool()

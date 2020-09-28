@@ -77,7 +77,7 @@ public:
 
 	protected :
 
-		bool collide(ColliderComponent* col, Entity& entity);
+		bool collide(ColliderComponent* col,Entity& a, Entity& entity);
 
 		// TODO : I can probably just use a pointer here 
 		std::shared_ptr<Mesh> _mesh;	// 8 	// So is this what fucks me up?

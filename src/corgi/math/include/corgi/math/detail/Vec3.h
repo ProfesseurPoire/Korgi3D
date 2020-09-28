@@ -301,9 +301,9 @@ public:
 
 	// Variables
 
-	ValueType x;
-	ValueType y;
-	ValueType z;
+	ValueType x = ValueType();
+	ValueType y = ValueType();
+	ValueType z = ValueType();
 
 	template<class U>
 	friend std::ostream& operator << (std::ostream& os, const Vec3<U>& a);		
