@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <string>
+#include <optional>
 
 /*
  *  The filesystem namespace contains functions and structures meant
@@ -14,7 +15,7 @@ namespace corgi { namespace filesystem {
 
 	class FileInfo;
 
-	/*
+	/*!
 	 * @brief   Checks if the file at the given path is a directory
 	 *
 	 * @param   path Path to the file we want to check
@@ -23,7 +24,7 @@ namespace corgi { namespace filesystem {
 	 */
 	[[nodiscard]] bool is_directory(const std::string& path);
 
-	/*
+	/*!
 	 *  @brief  Creates and returns a FileInfo object for a given file
 	 *
 	 *  @param  path    Path to the file or directory we want to retrieve 
@@ -33,7 +34,7 @@ namespace corgi { namespace filesystem {
 	 */
 	[[nodiscard]] FileInfo file_info(const std::string& path);
 
-	/*
+	/*!
 	 * @brief   List the files inside the given directory.
 	 *          
 	 *          Creates a @ref FileInfo object for each file that the function
@@ -47,7 +48,7 @@ namespace corgi { namespace filesystem {
 	 */
 	[[nodiscard]] std::vector<FileInfo> list_directory(const std::string& directory, bool recursive=false);
 
-	/*
+	/*!
 	 * @brief   Renames or moves a file or directory 
 	 *
 	 *          The function will move or rename the file or directory located
@@ -63,19 +64,18 @@ namespace corgi { namespace filesystem {
 	 */
 	bool rename(const std::string& oldPath, const std::string& newPath);
 
-	/*
-	 * @brief   Returns the file's extension
+	/*!
+	 * @brief   Returns the file's extension @a filepath
 	 * 
 	 *          extension("textures/frog.png"); will returns "png". 
 	 *
-	 * @param   path    Path to the file we want to extract the extension
+	 * @param   filepath Path to the file we want to extract the extension
 	 * 
-	 * @return  Returns a std::string storing the file's extension. 
-	 *          Returns an empty string if the file had no extension
+	 * @return  Returns a std::optional that contains the extension 
 	 */
-	[[nodiscard]] std::string extension(const std::string& path);
+	[[nodiscard]] std::optional<std::string> extension(const std::string& filepath);
 
-	/*
+	/*!
 	 * @brief   Returns the filename part of the given path
 	 * 
 	 *          filename("textures/frog.png"); will returns "frog.png"
@@ -86,7 +86,7 @@ namespace corgi { namespace filesystem {
 	 */
 	[[nodiscard]] std::string filename(const std::string& path);
 
-	/*
+	/*!
 	 * @brief   Returns the directory part of the given path
 	 *
 	 *          directory("textures/frog.png"); will return "textures"
@@ -97,7 +97,7 @@ namespace corgi { namespace filesystem {
 	 */
 	[[nodiscard]] std::string directory(const std::string& path);
 
-	/*
+	/*!
 	 * @brief   Returns the path without the file's name
 	 * 
 	 *          pathWithoutName("textures/frog.png"); will returns "textures/"
@@ -105,11 +105,10 @@ namespace corgi { namespace filesystem {
 	 * @param   path    Path to the file we want to extract the data
 	 *
 	 * @return  Returns a std::string with the path without the name
-	 *
 	 */
 	[[nodiscard]] std::string path_without_name(const std::string& path);
 
-	/*
+	/*!
 	 * @brief   Remove the file or empty directory located at the given path
 	 *
 	 *          If the directory isn't empty, the operation will fail. You
@@ -121,7 +120,7 @@ namespace corgi { namespace filesystem {
 	 */
 	bool remove(const std::string& path);
 
-	/*
+	/*!
 	 * @brief   Remove the file or directory located at the given path
 	 *
 	 *          removeAll will work even if the file isn't an empty
@@ -133,7 +132,7 @@ namespace corgi { namespace filesystem {
 	 */ 
 	void remove_all(const std::string& path);
 
-	/*
+	/*!
 	 * @brief  Check if a file exist a given path
 	 * 
 	 *  @param      path    Path to the file to be checked for existence
@@ -142,7 +141,7 @@ namespace corgi { namespace filesystem {
 	 */
 	[[nodiscard]] bool file_exist(const std::string& path);
 
-	/*
+	/*!
 	 * @brief   Creates a new directory a given path
 	 * 
 	 * @param   path    Path where the new directory must be created
@@ -151,7 +150,7 @@ namespace corgi { namespace filesystem {
 	 */
 	bool create_directory(const std::string& path);
 
-	/*
+	/*!
 	 * @brief   Stores information about a File
 	 *          
 	 *          A FileInfo object is only a snapshot of a file at a given

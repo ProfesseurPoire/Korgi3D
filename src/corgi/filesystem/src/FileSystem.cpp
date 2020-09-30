@@ -123,15 +123,15 @@ namespace corgi { namespace filesystem {
 	{
 		std::string str(path);
 		std::string ext;
-		bool start_ext = false;
 
-		for (size_t i = 0; i < str.size(); ++i)
+		for(auto it = path.crbegin(); it != path.crend(); it++)
 		{
-			if (start_ext)
-				ext += str[i];
-			if (str[i] == '.')
-				start_ext = true;
+			if(*it == '.')
+			{
+				ext
+			}
 		}
+		
 		return ext;
 	}
 
