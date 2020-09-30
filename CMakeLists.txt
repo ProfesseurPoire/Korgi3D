@@ -18,6 +18,7 @@ add_subdirectory(src/corgi/math)
 add_subdirectory(src/corgi/logger)
 add_subdirectory(src/corgi/ecs)
 add_subdirectory(src/corgi/filesystem)
+add_subdirectory(tools)
 add_subdirectory(tests)
 
 add_subdirectory(ext/glfw/)
