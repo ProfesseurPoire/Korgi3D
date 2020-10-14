@@ -1,0 +1,3 @@
+target_sources(ResourcesPackagerLib
+PUBLIC
+ResourcesPackager.h)

@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <optional>
+#include <exception>
 
 /*
  *  The filesystem namespace contains functions and structures meant
@@ -11,8 +12,8 @@
  *  have to add a compilation flag and use system calls for this specific
  *  platform
  */
-namespace corgi { namespace filesystem {
-
+namespace corgi::filesystem 
+{
 	class FileInfo;
 
 	/*!
@@ -22,7 +23,7 @@ namespace corgi { namespace filesystem {
 	 *
 	 * @return  Returns true if the file is a directory, false otherwise
 	 */
-	[[nodiscard]] bool is_directory(const std::string& path);
+	[[nodiscard]] bool is_directory(const std::string& filepath);
 
 	/*!
 	 *  @brief  Creates and returns a FileInfo object for a given file
@@ -32,7 +33,7 @@ namespace corgi { namespace filesystem {
 	 *
 	 *  @return Returns a @ref File object storing information about the file
 	 */
-	[[nodiscard]] FileInfo file_info(const std::string& path);
+	[[nodiscard]] FileInfo file_info(const std::string& filepath);
 
 	/*!
 	 * @brief   List the files inside the given directory.
@@ -68,12 +69,19 @@ namespace corgi { namespace filesystem {
 	 * @brief   Returns the file's extension @a filepath
 	 * 
 	 *          extension("textures/frog.png"); will returns "png". 
+	 * 
+	 * 			Throw an invalid_argument extension if no extension could be found
 	 *
 	 * @param   filepath Path to the file we want to extract the extension
 	 * 
 	 * @return  Returns a std::optional that contains the extension 
 	 */
-	[[nodiscard]] std::optional<std::string> extension(const std::string& filepath);
+	[[nodiscard]] std::string extension(const std::string& filepath);
+
+	/*!
+	 * @brief 	Returns true if @a filepath contains an extension
+	 */
+	[[nodiscard]] bool has_extension(const std::string& filepath);
 
 	/*!
 	 * @brief   Returns the filename part of the given path
@@ -81,10 +89,12 @@ namespace corgi { namespace filesystem {
 	 *          filename("textures/frog.png"); will returns "frog.png"
 	 *
 	 * @param   path    Path to the file we want to extract the filename
+	 * @param 	with_extension 	True by default, if set to false, the function will
+	 * 			return the filename without the extension
 	 *
 	 * @return  Returns a std::string with the file's name
 	 */
-	[[nodiscard]] std::string filename(const std::string& path);
+	[[nodiscard]] std::string filename(const std::string& path, bool with_extension=true);
 
 	/*!
 	 * @brief   Returns the directory part of the given path
@@ -139,16 +149,18 @@ namespace corgi { namespace filesystem {
 	 *
 	 *  @return     Returns true if the file exist, false otherwise
 	 */
-	[[nodiscard]] bool file_exist(const std::string& path);
+	[[nodiscard]] bool exists(const std::string& path);
 
 	/*!
 	 * @brief   Creates a new directory a given path
 	 * 
-	 * @param   path    Path where the new directory must be created
+	 * @param   filepath    Path where the new directory must be created
 	 *
 	 * @return  Returns true if a directory was created, false otherwise
 	 */
-	bool create_directory(const std::string& path);
+	bool create_directory(const std::string& filepath);
+
+	// TODO : Not exactly sure this is really used somewhere
 
 	/*!
 	 * @brief   Stores information about a File
@@ -170,7 +182,7 @@ namespace corgi { namespace filesystem {
 		[[nodiscard]] bool is_valid()const;
 		[[nodiscard]] bool is_folder()const;
 
-		[[nodiscard]] std::string extension()const;
+		[[nodiscard]] std::optional<std::string> extension() const;
 		[[nodiscard]] std::string name()const;
 
 		[[nodiscard]] const std::string& path()const;
@@ -179,9 +191,9 @@ namespace corgi { namespace filesystem {
 
 		FileInfo() = default;
 
-		bool _is_valid  = false;
-		bool _is_folder = false;
+		bool is_valid_  = false;
+		bool is_folder_ = false;
 
-		std::string _path;
+		std::string filepath_;
 	};
-}}
+}
