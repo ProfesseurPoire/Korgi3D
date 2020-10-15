@@ -33,6 +33,6 @@ TEST_F(TestResourcesPackager, convert_png_to_image)
     resource_packager_.convert("images/explosion.png");
 
     // I probably could put everything into the thing
-    assert_that(resource_packager_.file_exist("bin/images/explosion.img"), equals(true));
-    assert_that(resource_packager_.file_exist("bin/images/explosion.tex"), equals(true));
+    assert_that(resource_packager_.file_exist("bin/images/explosion.bin"), equals(true));
+    assert_that(resource_packager_.file_exist("images/explosion.tex"), equals(true));
 }

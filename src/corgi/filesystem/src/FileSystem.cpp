@@ -35,15 +35,6 @@ namespace corgi { namespace filesystem {
 
 	bool create_directory(const std::string& path)
 	{
-		int start_index = 0;
-
-		while(ended)
-		{
-			auto index = path.find('/',start_index);
-			start_index = index;
-		}
-		
-
 		return std::filesystem::create_directory(path);
 	}
 
@@ -109,6 +100,25 @@ namespace corgi { namespace filesystem {
 		return "";	
 	}
 
+	std::string no_extension(const std::string& filepath)
+	{
+		auto character_index = filepath.find_last_of('.');
+
+		// We throw an exception if we didn't find the character
+		if(character_index==std::string::npos)	
+		{
+			throw std::invalid_argument(("No extension found in filepath : " + filepath).c_str());
+		}
+
+		// we throw an exception if the dot is the last char of the string
+		if(character_index== filepath.size()-1)
+		{
+			throw std::invalid_argument(("No extension found after the dot character : "+filepath).c_str());
+		}
+
+		return filepath.substr(0, character_index);
+	}
+
 	bool rename(const std::string& path, const std::string& newPath)
 	{
 		std::error_code errorCode;
@@ -132,6 +142,7 @@ namespace corgi { namespace filesystem {
 	std::string filename(const std::string& path, bool with_extension)
 	{
 		std::string str;
+
 		for (size_t i = path.size() - 1; i > 0; --i)
 		{
 			if (path[i] == '/' || path[i] == '\\')

@@ -152,6 +152,13 @@ namespace corgi::filesystem
 	[[nodiscard]] bool exists(const std::string& path);
 
 	/*!
+	 * @brief 	Returns the filepath without the extension (if any)
+	 * 
+	 * 			For instance, "foo/bar/stuff.png" will return "foo/bar/stuff"
+	 */
+	[[nodiscard]] std::string no_extension(const std::string& filepath);
+
+	/*!
 	 * @brief   Creates a new directory a given path
 	 * 
 	 * @param   filepath    Path where the new directory must be created
