@@ -7,6 +7,8 @@
 #include <corgi/rapidjson/document.h>
 #include <corgi/rapidjson/filereadstream.h>
 
+#include <corgi/filesystem/FileSystem.h>
+
 #include <corgi/utils/Utils.h>
 
 using namespace corgi;

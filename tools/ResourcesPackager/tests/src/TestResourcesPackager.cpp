@@ -36,3 +36,14 @@ TEST_F(TestResourcesPackager, convert_png_to_image)
     assert_that(resource_packager_.file_exist("bin/images/explosion.bin"), equals(true));
     assert_that(resource_packager_.file_exist("images/explosion.tex"), equals(true));
 }
+
+TEST_F(TestResourcesPackager, convert_everything)
+{
+    resource_packager_.run();
+
+    assert_that(resource_packager_.file_exist("bin/images/explosion.bin"), equals(true));
+    assert_that(resource_packager_.file_exist("images/explosion.tex"), equals(true));
+
+    assert_that(resource_packager_.file_exist("bin/images/tileset.bin"), equals(true));
+    assert_that(resource_packager_.file_exist("images/tileset.tex"), equals(true));
+}

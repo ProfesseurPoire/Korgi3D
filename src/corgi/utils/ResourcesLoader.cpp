@@ -43,26 +43,18 @@ namespace corgi
 	{
 		if (!path.empty())
 		{
-			// TODO : Put this inside an util class, cause I copy paste
-			// this way too often
-			std::ifstream file(path.c_str(), std::ifstream::in | std::ifstream::binary);
+			std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
 
-			int fileSize = 0;
+			int x;
+			int y;
+			int channels;
+			char * pixels;
+			file >> x;
+			file >> y;
+			file >> channels;
 
-			if (file.is_open())
-			{
-				file.seekg(0, std::ios::end);
-				fileSize = int(file.tellg());
-				file.close();
-			}
+			file.read(pixels, x * y * channels);
 
-			FILE* fp = fopen(path.c_str(), "rb"); // non-Windows use "r"
-
-			char* readBuffer = new char[fileSize];
-
-			rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-			rapidjson::Document document;
-			document.ParseStream(is);
 
 			assert(document.HasMember("wrap_s"));
 			assert(document.HasMember("wrap_t"));
@@ -121,7 +113,7 @@ namespace corgi
 		{
 			std::string fullpath = d + "/" + path;
 			
-			if (filesystem::file_exist(fullpath.c_str()))
+			if (filesystem::exists(fullpath.c_str()))
 			{
 				return fullpath;
 			}
@@ -189,31 +181,6 @@ namespace corgi
 	{
 		renderer_ = &renderer;
 		auto files = get_all_files(directories_);
-
-		// First pass to make sure every .png has a .tex file associated
-		for (auto file : get_all_files(directories_))
-		{
-			if (file.extension() == "png")
-			{
-				// We check if a .tex exist for the current png, creates a default
-				// one otherwise
-
-				if (!filesystem::file_exist(file.path().substr(0, file.path().size() - 4) + ".tex"))
-				{
-					//Creates a default .tex file
-
-					std::ofstream f;
-					f.open(file.path().substr(0, file.path().size() - 4) + ".tex");
-
-					f<< R"({
-	"min_filter"	: "nearest",
-	"mag_filter"	: "nearest",
-	"wrap_s"		: "repeat",
-	"wrap_t"		: "repeat"
-})";
-				}
-			}
-		}
 
 		for (auto file : get_all_files(directories_))
 		{

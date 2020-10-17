@@ -19,7 +19,6 @@
 
 namespace corgi
 {
-
     bool has_default_texture(const std::string& filepath)
     {
         return (corgi::filesystem::exists(corgi::filesystem::no_extension(filepath)+".tex"));
@@ -99,7 +98,7 @@ file<< R"({
             rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
             rapidjson::Document document;
             document.ParseStream(is);
-
+ 
             assert(document.HasMember("wrap_s"));
             assert(document.HasMember("wrap_t"));
             assert(document.HasMember("min_filter"));
@@ -111,7 +110,8 @@ file<< R"({
 
             file<< document["wrap_s"].GetString();
             file<< document["wrap_t"].GetString();
-
+            
+            fclose(fp);
         }
         catch(const std::exception& e)
         {
@@ -142,9 +142,29 @@ file<< R"({
         }
     }
 
+    void ResourcePackager::run()
+    {
+        clear();
+
+        auto files = corgi::filesystem::list_directory(resource_folder_, true);
+    
+        for(auto file : files)
+        {
+            if(!file.is_folder())
+            {
+                convert(file.path().substr(resource_folder_.size()+1, std::string::npos));    
+            }
+        }
+    }
+
+    void ResourcePackager::clear()
+    {
+        std::filesystem::remove_all(resource_folder_+"/bin");
+    }
+
     bool ResourcePackager::convert(const std::string& filepath)
     {
-        const auto complete_file_path = resource_folder_+filepath;
+        const auto complete_file_path = filepath;
 
         if(corgi::filesystem::exists(complete_file_path))
         {
@@ -169,82 +189,10 @@ file<< R"({
     }
 }
 
-// #include <corgi/utils/ResourcesLoader.h>
-// #include <corgi\utils\AsepriteImporter.h>
-// #include <corgi\components\Animatorh>
-
-// class FileInfo
-// {
-// public:
-
-// 	FileInfo() = default;
-
-// 	bool _is_valid = false;
-// 	bool _is_folder = false;
-
-// 	std::string _path;
-// };
-
-// std::string filename(const std::string& path)
-// {
-// 	for (size_t i = path.size() - 1; i > 0; --i)
-// 		if (path[i] == '/' || path[i] == '\\')
-// 			return path.substr(i + 1, std::string::npos);	//npos means until the end of the string
-// 	return std::string();
-// }
-
-// std::string extension(const std::string& path)
-// {
-// 	std::string str(path);
-// 	std::string ext;
-// 	bool start_ext = false;
-
-// 	for (size_t i = 0; i < str.size(); ++i)
-// 	{
-// 		if (start_ext)
-// 		{
-// 			ext += str[i];
-// 		}
-// 		if (str[i] == '.')
-// 		{
-// 			start_ext = true;
-// 		}
-// 	}
-// 	return ext;
-// }
-
-// FileInfo file_info(const std::string& path)
-// {
-// 	FileInfo info;
-// 	info._path = path;
-// 	return info;
-// }
-
-// std::vector<FileInfo> list_directory(const std::string& directory, bool recursive)
-// {
-// 	std::vector<FileInfo> files;
-
-// 	for (auto& p : std::filesystem::directory_iterator(directory))
-// 	{
-// 		files.push_back(file_info(p.path().string()));
-
-// 		// If the file is a directory, and the function was called with
-// 		// recursive set to true, we simply call list_directory again
-// 		// on that directory, and append what the function returns
-// 		if (recursive && p.is_directory())
-// 		{
-// 			auto f = list_directory(p.path().string(), recursive);
-// 			files.insert(files.end(), f.begin(), f.end());
-// 		}
-// 	}
-// 	return files;
-// }
-
 // int main(int argc, char** argv)
 // {
 // 	// Needs a window
 // 	corgi::Renderer	renderer();
-
 
 // 	auto files = list_directory(argv[1], true);
 
