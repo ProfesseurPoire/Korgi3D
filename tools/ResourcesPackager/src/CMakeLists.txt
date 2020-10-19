@@ -1,9 +1,0 @@
-target_sources(ResourcesPackagerLib
-PRIVATE
-ResourcesPackager.cpp
-PUBLIC
-ResourcesPackager.h)
-
-target_sources(ResourcesPackagerExe
-PRIVATE
-ResourcesPackagerMain.cpp)
