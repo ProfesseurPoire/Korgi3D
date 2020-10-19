@@ -1,5 +1,3 @@
-
-
 add_executable(ResourcesPackager ResourcesPackager.cpp )
 
 set_property(TARGET ResourcesPackager PROPERTY CXX_STANDARD 20)
