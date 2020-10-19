@@ -12,11 +12,6 @@ namespace corgi
             ResourcePackager(const std::string& resource_folder) :
                 resource_folder_(resource_folder){}
 
-
-            void run();
-
-            void clear();
-
             /*!
              * @brief   Checks if a resource file exist in the resource folder
              */
@@ -36,6 +31,7 @@ namespace corgi
             bool convert(const std::string& filepath);
 
         private:
+
 
         std::string resource_folder_;
     };
