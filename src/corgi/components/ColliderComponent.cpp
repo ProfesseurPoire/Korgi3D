@@ -29,36 +29,23 @@ namespace corgi
 		return _current_layer;
 	}
 
-	bool ColliderComponent::collide(ColliderComponent* col,Entity& a, Entity& entity)
+	bool ColliderComponent::collide(ColliderComponent* col, Entity& entity)
 	{
-		auto opt_transform = entity.get_component<Transform>();
-
-		
-		
-		// TODO : this is actually really suspicious since I'm using the
-		// same transform twice
-		if(opt_transform)
-		{
-
-			auto& transform = opt_transform->get();
-			return math::intersect_3D
-			(
-
-				a.get_component<Transform>()->get().world_matrix(),
-				_mesh->indexes(),
-				_mesh->vertices().data(),
-				3,
-				0,
-				_mesh->vertex_count(),
-				entity.get_component<Transform>()->get().world_matrix(),
-				col->_mesh->vertices().data(),
-				col->_mesh->indexes(),
-				3,
-				0,
-				col->_mesh->vertex_count()
-			);
-		}
-		log_error("No transform stuff");
-		return false;
+		return math::intersect_3D
+		(
+			
+			entity.get_component<Transform>().world_matrix(),
+			_mesh->indexes(),
+			_mesh->vertices().data(),
+			3,
+			0,
+			_mesh->vertex_count(),
+			entity.get_component<Transform>().world_matrix(),
+			col->_mesh->vertices().data(),
+			col->_mesh->indexes(),
+			3,
+			0,
+			col->_mesh->vertex_count()
+		);
 	}
 }

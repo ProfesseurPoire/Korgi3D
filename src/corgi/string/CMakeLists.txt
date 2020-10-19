@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9.0)
 
-project(CorgiString)
+project(corgi-string)
 
 add_library(${PROJECT_NAME} STATIC
     src/String.cpp

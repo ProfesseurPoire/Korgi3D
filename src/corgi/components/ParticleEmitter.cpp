@@ -371,12 +371,11 @@ namespace corgi
 
 	Transform* ParticleEmitter::Particle::transform()
 	{
-		
-		return &_entity->get_component<Transform>()->get();
+		return &_entity->get_component<Transform>();
 	}
 
 	SpriteRenderer* ParticleEmitter::Particle::sprite_renderer()
 	{
-		return &_entity->get_component<SpriteRenderer>()->get();
+		return &_entity->get_component<SpriteRenderer>();
 	}
 }

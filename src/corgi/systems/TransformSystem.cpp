@@ -38,15 +38,7 @@ TransformSystem::~TransformSystem()
 
 void TransformSystem::sort()
 {
-	auto opt_pool = scene_.pools().get<Transform>();
-
-	if(!opt_pool)	
-	{
-		log_error("No Transform component pool exist for Transform System");
-		return;
-	}
-
-	auto& pool = opt_pool->get();
+	auto& pool = *scene_.pools().get<Transform>();
 
 	std::vector<int> ids;
 	ids.reserve(pool.components().size());
@@ -57,19 +49,14 @@ void TransformSystem::sort()
 	}
 
 	std::sort(
-		ids.begin(), ids.end(),
+		ids.begin(),
+		ids.end(),
 		[&](auto& a, auto& b)
 		{
-			auto ea = scene_.entities()[a];
-			auto eb = scene_.entities()[b];
+			auto& ea = *scene_.entities_[a];
+			auto& eb = *scene_.entities_[b];
 
-			if(!( ea || eb))
-			{
-				log_error("One entity doesn't have a transform component attached");
-			}
-
-			
-			return ea->get().depth()< eb->get().depth();
+			return ea.depth()< eb.depth();
 		}
 	) ;
 
@@ -108,36 +95,25 @@ void TransformSystem::update()
 
 	std::map<int, int> levels;
 
-	auto opt_pool = scene_.pools().get<Transform>();
 
-	if (!opt_pool)
+	for (auto& pool : *scene_.pools().get<Transform>())
 	{
-		log_error("Scene doesn't own a Transform component pool");
-		return;
-	}
+		auto& entity = *scene_.entities_[pool.first];
 
-	auto& pool = opt_pool->get();
-	
-	for (const auto transform_pair: pool)
-	{
-		auto opt_entity = scene_.entities()[transform_pair.first];
-
-		if(opt_entity)
+		if (!levels.contains(entity.depth()))
 		{
-			auto& entity = opt_entity->get();
-
-			if (!levels.contains(entity.depth()))
-			{
-				levels[entity.depth()] = 1;
-			}
-			else
-			{
-				levels[entity.depth()]++;
-			}
+			levels[entity.depth()] = 1;
+		}
+		else
+		{
+			levels[entity.depth()]++;
 		}
 	}
 
-	/*int size = 250;
+	auto& pool = *scene_.pools().get<Transform>();
+
+
+	int size = 250;
 	int  offset = 0;
 
 	for (auto pair : levels)
@@ -158,7 +134,7 @@ void TransformSystem::update()
 					for (int i = st; i < en; i++)
 					{
 						update_component(pool.components()[i]
-							, *scene_.entities()[pool.component_index_to_entity_id()[i]]);
+							, *scene_.entities_[pool.component_index_to_entity_id()[i]]);
 					}
 				}
 			);
@@ -176,7 +152,7 @@ void TransformSystem::update()
 					for (int i = st; i < en; i++)
 					{
 						update_component(pool.components()[i]
-							, *scene_.entities()[pool.component_index_to_entity_id()[i]]);
+							, *scene_.entities_[pool.component_index_to_entity_id()[i]]);
 					}
 				}
 			);
@@ -186,16 +162,13 @@ void TransformSystem::update()
 		tp.wait_finished();
 
 		offset += count;
-	}*/
-
-	//int start = 0;
-	
-	
-	for (auto& transform : scene_.pools().get<Transform>()->get())
-	{
-		auto& entity = *scene_.entities()[transform.first];
-		update_component(transform.second,entity);
 	}
+	
+	/*for (auto& transform : *scene_.pools().get<Transform>())
+	{
+		auto& entity = *scene_.entities_[transform.first];
+		update_component(transform.second,entity);
+	}*/
 }
 
 void TransformSystem::update_component(Transform& transform, Entity& entity)
@@ -206,8 +179,7 @@ void TransformSystem::update_component(Transform& transform, Entity& entity)
 		{
 			if (entity.parent() && entity.parent()->has_component<Transform>())
 			{
-				auto m = entity.parent()->get_component<Transform>()->get().model_matrix_;
-				transform.model_matrix_ = m * local_matrix(transform);
+				transform.model_matrix_ = entity.parent()->get_component<Transform>().model_matrix_ * local_matrix(transform);
 			}
 			else
 			{
@@ -225,11 +197,9 @@ void TransformSystem::update_component(Transform& transform, Entity& entity)
 		// update them. Their dirty flag will set to false so we don't update them more than once
 		for (auto& child : entity.children())
 		{
-			auto opt_transform = child->get_component<Transform>();
-
-			if(opt_transform)
+			if (child->has_component<Transform>())
 			{
-				opt_transform->get().set_dirty();
+				child->get_component<Transform>().set_dirty();
 			}
 		}
 	}

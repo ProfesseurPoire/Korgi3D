@@ -66,12 +66,12 @@ namespace corgi
 					int i =   p.second;
 
 					auto& c = *pool->at(i);
-					auto& e = *scene_.entities()[p.first];
+					auto& e = *scene_.entities_[p.first];
 
-					if( e.get().is_enabled())
+					if( e.is_enabled())
 					{
 						RendererComponent* rc = static_cast<RendererComponent*>(&c);
-						renderer_components_.push_back({rc,&e.get()});
+						renderer_components_.push_back({rc,&e});
 					}
 				}
 			}

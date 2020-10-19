@@ -63,10 +63,10 @@ public:
 
 	Transition(Transition& tr)
 	{
-		_lambdas   = std::move(tr._lambdas);
-		booleans_  = std::move(tr.booleans_);
-		timers_    = std::move(tr.timers_);
-		_new_state = std::move(tr._new_state);
+		_lambdas   = tr._lambdas;
+		booleans_  = tr.booleans_;
+		timers_    = tr.timers_;
+		_new_state = tr._new_state;
 
 		comparisons_ = std::move(tr.comparisons_);
 	}
@@ -174,11 +174,10 @@ public:
 
 	Transition& new_transition(unsigned int v);
 
+	Event<Entity&>& on_exit_event();
+	Event<Entity&>& on_enter_event();
+	Event<Entity&>& on_update_event();
 
-	std::function<void(Entity&)> on_exit;
-	std::function<void(Entity&)> on_enter;
-	std::function<void(Entity&)> on_update;
-	
 	[[nodiscard]] unsigned int id() const;
 
 	BlendTree blend_tree;
@@ -188,6 +187,9 @@ protected:
 	// could probably just use a std::string here
 	unsigned int id_;
 
+	Event<Entity&> on_exit_;
+	Event<Entity&> on_enter_;
+	Event<Entity&> on_update_;
 
 	std::vector<Transition> transitions_;
 };

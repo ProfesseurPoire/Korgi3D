@@ -62,19 +62,11 @@ const Vector<Collision>& CollisionSystem::exit_collisions()const
 
 		std::vector<Collision> newCollisions;
 
-		auto opt_colllider_pool = scene_.pools().get<BoxCollider>();
+		auto& collider_pool = *scene_.pools().get<BoxCollider>();
 
-		if(!opt_colllider_pool)
+		for(auto& collider : collider_pool)
 		{
-			log_error("Could not find a BoxCollider pool");
-			return;
-		}
-	
-		auto& collider_pool = opt_colllider_pool->get();
-
-		for(auto [entity_id, collider] : collider_pool)
-		{
-			collider.colliding = false;
+			collider.second.colliding = false;
 		}
 
 		auto m = collider_pool.get_map();
@@ -95,11 +87,11 @@ const Vector<Collision>& CollisionSystem::exit_collisions()const
 					continue;
 				}
 
-				BoxCollider& first_collider		= *dynamic_cast<BoxCollider*>(collider_pool.at(p.second));
-				Entity& e1 = *scene_.entities()[p.first];
+				BoxCollider& first_collider		= *static_cast<BoxCollider*>(collider_pool.at(p.second));
+				Entity& e1 = *scene_.entities_[p.first];
 
-				BoxCollider& second_collider	= *dynamic_cast<BoxCollider*>(collider_pool.at(p2.second));
-				Entity& e2 = *scene_.entities()[p2.first];
+				BoxCollider& second_collider	= *static_cast<BoxCollider*>(collider_pool.at(p2.second));
+				Entity& e2 = *scene_.entities_[p2.first];
 
 				//  so how do I get the entity back here ...
 
@@ -115,9 +107,9 @@ const Vector<Collision>& CollisionSystem::exit_collisions()const
 				{
 					continue;
 				}
-				
+
 				// First we check if the 2 collider are actually in contact
-				if (first_collider.collide(&second_collider,e1, e2))
+				if (first_collider.collide(&second_collider, e2))
 				{
 					first_collider.colliding  = true;
 					second_collider.colliding = true;

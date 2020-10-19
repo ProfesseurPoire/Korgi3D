@@ -171,7 +171,7 @@ namespace corgi
 
 				reset();
 				std::string fps = "FPS : " + fps_value + " Render Time " + render_time + " Update " + update_time;
-				window.title(fps.c_str());
+				//window.title(fps.c_str());
 			}
 		}
 	};
@@ -190,7 +190,7 @@ namespace corgi
 	{
 		Profiler profiler;
 
-		//game_time.timestep(time_step_);
+		game_time.timestep(time_step_);
 		game_time.start();
 
 		while (!window().is_closing())
@@ -232,8 +232,8 @@ namespace corgi
 			}
 			else
 			{*/
-			//while (game_time.timestep_overrun())
-			//{
+			while (game_time.timestep_overrun())
+			{
 				renderer().window_draw_list().clear();
 				renderer().world_draw_list().clear();
 
@@ -245,7 +245,7 @@ namespace corgi
 				scene().update(time_step_);
 				scene().after_update(time_step_);
 				profiler.update_counter_.tick();
-			//}
+			}
 			//}
 
 			// Not sure if I should pack swap_buffer with it or not

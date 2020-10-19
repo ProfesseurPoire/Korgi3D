@@ -8,14 +8,14 @@ namespace corgi
 	FrameBuffer::FrameBuffer(const int width, const int height)
 		:width_(width), height_(height)
 	{
-		log_info("FrameBuffer Constructor");
+		log_message("FrameBuffer Constructor");
 		id_ = RenderCommand::generate_frame_buffer();
 		init();
 	}
 
 	FrameBuffer::FrameBuffer(const FrameBuffer& framebuffer)
 	{
-		log_info("FrameBuffer Copy Constructor");
+		log_message("FrameBuffer Copy Constructor");
 		width_ = framebuffer.width_;
 		height_ = framebuffer.height_;
 		id_ = RenderCommand::generate_frame_buffer();
@@ -29,7 +29,7 @@ namespace corgi
 		color_attachment_(std::move(framebuffer.color_attachment_)),
 		depth_buffer_(std::move(framebuffer.depth_buffer_))
 	{
-		log_info("FrameBuffer Move Constructor");
+		log_message("FrameBuffer Move Constructor");
 
 		// Just to make sure the moved Framebuffer is in an empty state
 		framebuffer.id_		= 0;
@@ -62,7 +62,7 @@ namespace corgi
 
 	FrameBuffer::~FrameBuffer()
 	{
-		log_info("FrameBuffer Destructor");
+		log_message("FrameBuffer Destructor");
 
 		if(id_!=0)
 			RenderCommand::delete_frame_buffer(id_);

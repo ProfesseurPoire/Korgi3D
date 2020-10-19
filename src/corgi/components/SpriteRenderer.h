@@ -81,6 +81,7 @@ namespace corgi
 
 	private:
 
+		bool is_enabled_=false;
 
 		Sprite _sprite;
 	};

@@ -1,3 +1,7 @@
 #pragma once
 
-#define OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+
+#define OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
+
+
+

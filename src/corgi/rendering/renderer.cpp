@@ -640,24 +640,15 @@ namespace corgi
 
 	bool Renderer::depth_sorting(const Component* a, const Component* b, Entity& ea, Entity& eb)
 	{
-		auto opt_transform_a = ea.get_component<Transform>();
-		auto opt_transform_b = eb.get_component<Transform>();
+		Vec3 va = (ea.get_component<Transform>().world_position());
+		Vec3 vb = (eb.get_component<Transform>().world_position());
 
-		
-		if(opt_transform_a && opt_transform_b)
+		if (va.z == vb.z)
 		{
-			Vec3 va = (opt_transform_a->get().world_position());
-			Vec3 vb = (opt_transform_b->get().world_position());
-
-			if (va.z == vb.z)
-			{
-				return va.y > va.y;
-			}
-			return	va.z < vb.z;
+			return va.y > va.y;
 		}
 
-		log_error("The component don't have a transform attached to them");
-		return false;
+		return	va.z < vb.z;
 	}
 
 	void Renderer::draw(ColliderComponent* collider, Entity& entity)
@@ -673,18 +664,9 @@ namespace corgi
 
 		material.mode = Material::PolygonMode::Line;
 
-		auto opt_transform = entity.get_component<Transform>();
-
-		if(opt_transform)
-		{
-			begin_material(material);
-			draw(*collider->_mesh, opt_transform->get().world_matrix());
-			end_material(material);
-		}
-		else
-		{
-			log_error("No transform in draw function");
-		}
+		begin_material(material);
+			draw(*collider->_mesh, entity.get_component<Transform>().world_matrix());
+		end_material(material);
 	}
 
 	PostProcessing* Renderer::post_processing()
@@ -733,29 +715,12 @@ namespace corgi
 
 		// Sort the camera by their order value
 		//std::sort(scene.cameras.begin(), scene.cameras.end());
-
-		auto opt_camera_pool = scene.pools().get<Camera>();
-		if(!opt_camera_pool)
-		{
-			log_error("Could not find a Camera Pool");
-			return;
-		}
-
-		auto& camera_pool = opt_camera_pool->get();
 		
-		for (auto& camera : camera_pool)
+		for (auto& camera : *scene.pools().get<Camera>())
 		{
 			_current_camera = &camera.second;
 
-			auto opt_camera_entity = scene.entities()[camera.first];
-
-			if (!opt_camera_entity)
-			{
-				log_error("Could not find the entity attached to the current camera");
-				continue;
-			}
-			
-			auto& camera_entity = opt_camera_entity->get();
+			auto& camera_entity = *scene.entities_[camera.first];
 
 			// Set the framebuffer attached to the camera. If the camera
 			// has no framebuffer attached, we use the default one
@@ -794,22 +759,7 @@ namespace corgi
 			}
 
 			_projection_matrix		= _current_camera->projection_matrix();
-			//Matrix m;
-			//m.ortho(-300, 300, -200, 200, -100, 100);
-			//_projection_matrix = m;
-			auto opt_transform = camera_entity.get_component<Transform>();
-
-			if(opt_transform)
-			{
-				_view_matrix = opt_transform->get().world_matrix().inverse();
-			}
-			else
-			{
-				log_error("Something probably went wrong with the camera IDK");
-			}
-			
-			//_view_matrix = Matrix::translation(100.0f, 100.0f, -10.0f);
-			
+			_view_matrix			= camera_entity.get_component<Transform>().world_matrix().inverse();
 
 			//  TODO : Use a priority_queue and use this type underneath
 			std::map<int, std::vector<std::pair<const RendererComponent*,Entity*>>> render_queues;
@@ -818,13 +768,10 @@ namespace corgi
 			
 			for(auto r : renderingSystem->renderer_components_)
 			{
-				if (!r.first->is_enabled_)
-					continue;
-				
 				//TODO : Change how we set the layer in entity so I don't make this mistake again
 				// of shifting the bits here
 				// We only display the current renderer if the layers are valid
-				if(( (int_64(1)<< int_64(r.second->current_layer_)) & _current_camera->culling_layers().layers())!= 0)
+				if(( (int_64(1)<< int_64(r.second->layer_)) & _current_camera->culling_layers().layers())!= 0)
 				{
 					render_queues[r.first->material.render_queue].push_back({r.first, r.second});
 				}
@@ -923,33 +870,13 @@ namespace corgi
 			
 			if (_show_colliders)
 			{
-				auto opt_pool_collider = scene.pools().get<BoxCollider>();
-
-				if(!opt_pool_collider)
+				for (auto& collider : (*scene.pools().get<BoxCollider>()))
 				{
-					log_warning("No Box Collider Pool");
-					return;
-				}
+					auto& collider_entity = *scene.entities_[collider.first];
 
-				auto& collider_pool = opt_pool_collider->get();
-				
-				for (auto collider_pair : collider_pool)
-				{
-					auto& collider = collider_pair.second;
-
-					// TODO : Maybe shrink that 3 line thing somehow?
-					auto opt_entity = scene.entities()[collider_pair.first];
-
-					if(!opt_entity)
+					if(collider.second.is_enabled() && collider_entity.enabled_)
 					{
-						log_error("Could not find entity attached to the collider component","Renderer");
-					}
-
-					auto& entity = opt_entity->get();
-
-					if(collider.is_enabled() && entity.is_enabled())
-					{
-						draw(&collider, entity);
+						draw(&collider.second,collider_entity);
 					}
 				}
 			}
@@ -970,6 +897,7 @@ namespace corgi
 
 		_projection_matrix.identity();
 		//post_processing_->update(Game::scene().find("MainCamera")->get_component<Camera>(),*this);
+
 
 		_projection_matrix = Matrix::ortho(
 			0.0f, static_cast<float>(window->width()),
@@ -1243,14 +1171,10 @@ namespace corgi
 
 		check_gl_error();
 		
-		for (auto [renderer, entity]: renderers)
+		for (auto& renderer : renderers)
 		{
-			auto opt_transform = entity->get_component<Transform>();
-
-			if(opt_transform)
-			{
-				draw(*renderer->_mesh.get(), opt_transform->get().world_matrix());
-			}
+			// Todo : probably not the best thing here
+			draw(*renderer.first->_mesh,renderer.second->get_component<Transform>().world_matrix());
 		}
 		
 		end_material(material);
@@ -1549,6 +1473,7 @@ namespace corgi
 		glViewport(x, y,width, height);
 	}
 
+   
    /* void Renderer::WindowDrawList::reserve(int size)
 	{
 		rectangles.resize(size);

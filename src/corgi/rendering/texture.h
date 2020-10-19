@@ -30,7 +30,11 @@ namespace corgi
 			LinearMipmapNearest     = 5
 		};
 
-		enum class MagFilter : char {Nearest = 0, Linear = 1};
+		enum class MagFilter : char
+		{
+			Nearest     = 0,
+			Linear      = 1
+		};
 
 		enum class Wrap : char
 		{
@@ -43,7 +47,11 @@ namespace corgi
 
 		enum class Format : char
 		{
-			RED, RG, RGB, BGR, RGBA,
+			RED,
+			RG,
+			RGB,
+			BGR,
+			RGBA,
 			BGRA,
 			RED_INTEGER,
 			RG_INTEGER,
@@ -77,20 +85,26 @@ namespace corgi
 
 		enum class DataType : char
 		{
-			UnsignedByte, Byte, UnsignedShort, Short,
-			UnsignedInt, Int, HalfFloat, Float, UnsignedInt24_8
+			UnsignedByte,
+			Byte,
+			UnsignedShort,
+			Short,
+			UnsignedInt,
+			Int,
+			HalfFloat,
+			Float,
+			UnsignedInt24_8
 		};
 
 	// Lifecycle
 
 		Texture();
-		Texture(const std::string& file);
 
 		/*!
 		 * @brief Generates a new texture
+		 * 
 		 */
-		Texture
-		(
+		Texture(
 			const std::string & name,
 			int width, 
 			int height, 
@@ -101,8 +115,7 @@ namespace corgi
 			Format format, 
 			InternalFormat internal_format, 
 			DataType dt, 
-			unsigned char* data = nullptr
-		);
+			unsigned char* data = nullptr);
 
 		Texture(Texture&& texture)noexcept;
 		Texture(const Texture& texture) = delete;

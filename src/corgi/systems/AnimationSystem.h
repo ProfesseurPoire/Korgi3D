@@ -51,31 +51,14 @@ public:
 
 	void update()override
 	{
-		auto opt_pool = scene_.pools().get<Animator>();
-
-		if(!opt_pool)
+		for(auto& a : *scene_.pools().get<Animator>())
 		{
-			log_error("No Animator pool for Animation System to work with");
-			return;
-		}
-
-		auto& pool = opt_pool->get();
-		
-		for(auto [entity_id, animator] : pool)
-		{
-			if(animator.is_enabled())
+			if(a.second.is_enabled())
 			{
-				auto opt_entity = scene_.entities()[entity_id];
+				auto& animator =  a.second;
+				auto& entity   =   *scene_.entities_[a.first];
 
-				if(!opt_entity)
-				{
-					log_error("Could not find entity attached to animator");
-					continue;
-				}
-				
-				auto& entity   =   opt_entity->get();
-
-				update_scaling_animation(animator.scaling_animation_, entity.get_component<Transform>()->get());
+				update_scaling_animation(animator.scaling_animation_, entity.get_component<Transform>());
 	
 				if (animator._animations.empty())
 				{
@@ -87,7 +70,7 @@ public:
 					return;
 				}
 
-				SpriteRenderer& sprite = entity.get_component<SpriteRenderer>()->get();
+				SpriteRenderer& sprite = entity.get_component<SpriteRenderer>();
 				animator.current_time += Game::scene().elapsed_time();
 				
 				if (animator.current_time > animator._current_frame_threshold)

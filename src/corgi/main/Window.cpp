@@ -99,7 +99,6 @@ namespace corgi
 	void Window::title(const char* title)
 	{
         title_ = title;
-		SDL_SetWindowTitle(static_cast<SDL_Window*>(window_), title);
 	}
 
 	void Window::vsync(bool value)

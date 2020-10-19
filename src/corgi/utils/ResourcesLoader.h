@@ -2,51 +2,10 @@
 
 #include <corgi/containers/Vector.h>
 #include <corgi/string/String.h>
-#include <corgi/resources/Animation.h>
-
-#include <optional>
-#include <map>
-#include <any>
-
-namespace Editor
-{
-	class TiledImporter;
-}
+#include <corgi/resources/Animation.h> 
 
 namespace corgi
 {
-
-// Basically just a map of map storing resources
-class Resources
-{
-public:
-	
-	template<class T>
-	static [[nodiscard]] std::optional<std::reference_wrapper<T>> at(const std::string& path)
-	{
-		if(resources_[typeid(T)].contains(path))
-		{
-			return std::any_cast<T>(resources_[typeid(T)].at(path));
-		}
-
-		// Resources throw an exception if they are not successfuly constructed
-		try
-		{
-			return std::any_cast<T>(resources_[typeid(T)].emplace(typeid(T), T(path)));
-		}
-		catch(const std::exception& e )
-		{
-			log_error("Could not construct ressource" + path);
-			return std::nullopt;
-		}
-	}
-
-private:
-
-	static inline std::map<std::type_index, std::map<std::string, std::any>> resources_;
-};
-	
-	
 	class Renderer;
 	class Texture;
 	class Image;
@@ -116,21 +75,6 @@ private:
 		 *			texture could not be found, returns nullptr.
 		 */
 		static Texture* texture(const String& name);
-
-
-		/*!
-		 * @brief 	Tries to load a stored Tilemap called @a name
-		 * 
-		 * 			This function will first check if a tilemap called @a name is stored. If not,
-		 * 			an error is logged and the function will return a std::nullopt. Otherwise,
-		 * 			the function returns a reference to the requested tilemap
-		 * 
-		 * @param 	name 	The name of the requested tilemap
-		 * 
-		 * @return 	Returns an optional to the requested reference tilemap. If the requested tilemap
-		 * 			could not be found, returns std::nullopt.
-		 */
-		static std::optional<std::reference_wrapper<Editor::TiledImporter>> load_tilemap(const std::string& name);
 
 		/*!
 		 * @brief	Tries to load a stored material called @a name. 
@@ -216,6 +160,7 @@ private:
 		 * @brief	Tries to load animations
 		 */
 		static Vector<Animation> load_animations(const String& path);
+
 		
 		/*
 		 *  The initialize and finalize functions are called by the Game 
