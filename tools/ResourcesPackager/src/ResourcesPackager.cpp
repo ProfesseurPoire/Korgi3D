@@ -19,126 +19,118 @@
 
 namespace corgi
 {
-
-    bool has_default_texture(const std::string& filepath)
-    {
-        return (corgi::filesystem::exists(corgi::filesystem::no_extension(filepath)+".tex"));
-    }
-
-    void create_default_texture(const std::string& source_file)
-    {
-        try
-        {
-            std::ofstream file;
-
-            file.open(corgi::filesystem::no_extension(source_file)+".tex");
-
-file<< R"({
-    "min_filter"	: "nearest",
-    "mag_filter"	: "nearest",
-    "wrap_s"		: "repeat",
-    "wrap_t"		: "repeat"
-})";
-        }
-        catch(const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
-    }
-
     void export_image(const std::string& source_file, const std::string& output_file)
     {
-        try
-        {
-            int x, y, channels;
+        int x, y, channels;
 
-            // Images are horizontal on OpenGL otherwise
-            stbi_set_flip_vertically_on_load(true);
+        // Images are horizontal on OpenGL otherwise
+        stbi_set_flip_vertically_on_load(true);
 
-            stbi_uc* imageData = stbi_load(source_file.c_str(), &x, &y, &channels
-                , STBI_rgb_alpha);
+        stbi_uc* imageData = stbi_load(source_file.c_str(), &x, &y, &channels
+            , STBI_rgb_alpha);
 
-            // Now we're simply going to write things into a file
+        // Now we're simply going to write things into a file
 
-            const auto dir = corgi::filesystem::directory(output_file);
-            
-            // ok so create directories works, nice
-            std::filesystem::create_directories(dir);
+        const auto dir = corgi::filesystem::directory(output_file);
 
-            std::ofstream file;
         
-            file.open(corgi::filesystem::no_extension(output_file)+".bin", std::ofstream::binary | std::ofstream::out);
-            
-            file.write((const char*)&x, sizeof(int));
-            file.write((const char*)&y, sizeof(int));
-            file.write((const char*)&channels, sizeof(int));
-            file.write((const char*)imageData, x*y*channels);
 
-            // I kinda wish to also have the texture data inside this crap  
+        std::filesystem::create_directory(dir);
 
-            std::ifstream texture_file(corgi::filesystem::no_extension(source_file)+".tex", std::ifstream::in | std::ifstream::binary);
+        //std::ofstream file;
 
-            int fileSize = 0;
+        //auto directory  = corgi::filesystem::directory(filepath);
+        //auto filename   = corgi::filesystem::filename(filepath, true);
 
-            if(!texture_file.is_open())
-            {
-                throw("Could not open file for texture");
-            }
-
-            if (texture_file.is_open())
-            {
-                texture_file.seekg(0, std::ios::end);
-                fileSize = int(texture_file.tellg());
-                texture_file.close();
-            }
-
-            FILE* fp = fopen((corgi::filesystem::no_extension(source_file)+".tex").c_str(), "rb"); // non-Windows use "r"
-
-            char* readBuffer = new char[fileSize];
-
-            rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-            rapidjson::Document document;
-            document.ParseStream(is);
-
-            assert(document.HasMember("wrap_s"));
-            assert(document.HasMember("wrap_t"));
-            assert(document.HasMember("min_filter"));
-            assert(document.HasMember("mag_filter"));
-
-            // TODO : Use a code here instead of a string 
-            file<< document["min_filter"].GetString()<<"\n";
-            file<< document["mag_filter"].GetString()<<"\n";
-
-            file<< document["wrap_s"].GetString();
-            file<< document["wrap_t"].GetString();
-
-        }
-        catch(const std::exception& e)
-        {
-            std::cerr << e.what() << '\n';
-        }
+        //file.open(output_file);
     }
 
     void convert_png(const std::string& resource_folder, const std::string& filepath)
     {
         if (!filepath.empty())
         {
-            try
-            {
-                if(!has_default_texture(resource_folder+"/"+filepath))
-                {
-                    create_default_texture(resource_folder+"/"+filepath);
-                }
-                export_image(resource_folder+"/"+filepath, resource_folder+"/bin/"+filepath);
-            }
-            catch(const std::exception& e)
-            {
-                std::cerr << e.what() << '\n';
-            }
+            export_image(resource_folder+"/"+filepath, resource_folder+"/bin/"+filepath);
+
+            // // So apparently this is where I actually 
+            // std::ifstream file(path.c_str(), std::ifstream::in | std::ifstream::binary);
+
+            // int fileSize = 0;
+
+            // if(!file.is_open())
+            // {
+            //     throw("Could not open file for texture");
+            // }
+
+            // if (file.is_open())
+            // {
+            //     file.seekg(0, std::ios::end);
+            //     fileSize = int(file.tellg());
+            //     file.close();
+            // }
+
+            // FILE* fp = fopen(path.c_str(), "rb"); // non-Windows use "r"
+
+            // char* readBuffer = new char[fileSize];
+
+            // rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
+            // rapidjson::Document document;
+            // document.ParseStream(is);
+
+            // assert(document.HasMember("wrap_s"));
+            // assert(document.HasMember("wrap_t"));
+            // assert(document.HasMember("min_filter"));
+            // assert(document.HasMember("mag_filter"));
+
+            // corgi::Image* image = Editor::Utils::LoadImageForReal(
+            //     (path.substr(0, path.size() - 4) + ".png").c_str());
+
+            // name_ 	= filesystem::filename((path.substr(0, path.size() - 4) + ".png"));
+            // width_ 	= image->width();
+            // height_ = image->height();
+            
+            // min_filter_ = parse_min_filter(document["min_filter"].GetString());
+            // mag_filter_ = parse_mag_filter(document["mag_filter"].GetString());
+
+            // wrap_s_ 	= load_wrap(document["wrap_s"].GetString());
+            // wrap_t_		= load_wrap(document["wrap_t"].GetString());
+
+            // id_ 		= RenderCommand::generate_texture_object();
+
+            // RenderCommand::bind_texture_object(id_);
+
+            // if (image->channel() == 3)
+            // {
+            //     RenderCommand::initialize_texture_object
+            //     (
+            //         Format::RGB, InternalFormat::RGB,
+            //         width_, height_,
+            //         DataType::UnsignedByte,
+            //         image->pixels()
+            //     );
+            // }
+
+            // if (image->channel() == 4)
+            // {
+            //     RenderCommand::initialize_texture_object
+            //     (
+            //         Format::RGBA, InternalFormat::RGBA,
+            //         width_, height_,
+            //         DataType::UnsignedByte,
+            //         image->pixels()
+            //     );
+            // }
+
+            // RenderCommand::texture_parameter(min_filter_);
+            // RenderCommand::texture_parameter(mag_filter_);
+            // RenderCommand::texture_wrap_s(wrap_s_);
+            // RenderCommand::texture_wrap_t(wrap_t_);
+            // RenderCommand::end_texture();	
+
+            // delete image;
         }
         else
         {
-            throw std::exception(("No files at filepath : "+filepath).c_str());
+            throw("Could not construstruct the thing");
         }
     }
 
