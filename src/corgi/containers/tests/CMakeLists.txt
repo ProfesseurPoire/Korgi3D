@@ -13,6 +13,8 @@ target_sources(${PROJECT_NAME}
 # Needed so it looks for CorgiTest in lib64 folder when in x64 architecture
 set_property(GLOBAL PROPERTY FIND_LIBRARY_USE_LIB64_PATHS TRUE)
 
+find_package(CorgiTest)
+
 target_link_libraries(${PROJECT_NAME}
     PRIVATE
     CorgiContainers

@@ -141,6 +141,7 @@ Texture::Texture(const std::string& path)
 	{
 		throw("Could not construstruct the thing");
 	}
+	
 }
 
 Texture::Texture(Texture&& texture) noexcept

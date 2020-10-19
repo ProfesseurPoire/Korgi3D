@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.9.0)
 
 project(CorgiFilesystem VERSION 1.0.0)
 
+
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
@@ -23,5 +24,3 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	CorgiString
 )
-
-add_subdirectory(tests)

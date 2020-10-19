@@ -18,7 +18,6 @@ add_subdirectory(src/corgi/math)
 add_subdirectory(src/corgi/logger)
 add_subdirectory(src/corgi/ecs)
 add_subdirectory(src/corgi/filesystem)
-add_subdirectory(src/corgi/rapidjson)
 add_subdirectory(tools)
 add_subdirectory(tests)
 
@@ -120,7 +119,6 @@ if(MSVC)
 	CorgiFilesystem
 	CorgiLogger
 	CorgiString
-	RapidJson
 	opengl32	
 	${CMAKE_SOURCE_DIR}/ext/SDL/lib/x86/SDL2.lib
 	${CMAKE_SOURCE_DIR}/ext/SDLMixer/lib/x86/SDL2_mixer.lib)
@@ -133,7 +131,6 @@ else()
 	CorgiMath   
 	CorgiFilesystem
 	CorgiString
-	RapidJson
 	GL
 	stdc++fs)
 endif()

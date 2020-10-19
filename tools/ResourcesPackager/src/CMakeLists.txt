@@ -1,6 +1,8 @@
 target_sources(ResourcesPackagerLib
 PRIVATE
-ResourcesPackager.cpp)
+ResourcesPackager.cpp
+PUBLIC
+ResourcesPackager.h)
 
 target_sources(ResourcesPackagerExe
 PRIVATE

@@ -4,7 +4,6 @@
 #include <stdarg.h>
 #include <filesystem>
 #include <iostream>
-#include <algorithm>
 
 namespace corgi { namespace filesystem {
 
@@ -35,15 +34,6 @@ namespace corgi { namespace filesystem {
 
 	bool create_directory(const std::string& path)
 	{
-		int start_index = 0;
-
-		while(ended)
-		{
-			auto index = path.find('/',start_index);
-			start_index = index;
-		}
-		
-
 		return std::filesystem::create_directory(path);
 	}
 
@@ -52,7 +42,7 @@ namespace corgi { namespace filesystem {
 		std::filesystem::remove_all(path);
 	}
 
-	bool exists(const std::string& path)
+	bool file_exist(const std::string& path)
 	{
 		return std::filesystem::exists(path);
 	}
@@ -78,35 +68,20 @@ namespace corgi { namespace filesystem {
 
 	std::string directory(const std::string& path)
 	{
-		auto index_last = path.find_last_of('/');
-		auto other 		= path.find_last_of('\\');
-		
-		if(other==std::string::npos && index_last==std::string::npos)
+		int index_last  = find_last(path, '/');
+		int other       = find_last(path, '\\');
+
+		int final_index = other;
+
+		if (index_last > other)
 		{
-			throw std::invalid_argument("No directory delimitator found");
+			final_index = index_last;
 		}
 
-		if(index_last!=std::string::npos && other==std::string::npos)
-		{
-			return path.substr(0, index_last);
-		}
+		if (final_index == -1)
+			return path;
 
-		if(index_last==std::string::npos && other!=std::string::npos)
-		{
-			return path.substr(0, other);
-		}
-
-		if( index_last> other)
-		{
-			return path.substr(0, index_last);
-		}
-
-		if(other > index_last)
-		{
-			return path.substr(0, other);
-		}	
-
-		return "";	
+		return path.substr(0, final_index);
 	}
 
 	bool rename(const std::string& path, const std::string& newPath)
@@ -129,73 +104,35 @@ namespace corgi { namespace filesystem {
 		return path.substr(0, index + 1);
 	}
 
-	std::string filename(const std::string& path, bool with_extension)
+	std::string filename(const std::string& path)
 	{
-		std::string str;
 		for (size_t i = path.size() - 1; i > 0; --i)
-		{
 			if (path[i] == '/' || path[i] == '\\')
-			{
-				str = path.substr(i + 1, std::string::npos);	//npos means until the end of the string
-			}
-		}
-
-		if(!with_extension)
-		{
-			for(auto it = str.crbegin(); it != str.crend(); it++)
-			{
-				if(*it == '.')
-				{
-					str = str.substr(0, (it - str.crend()));
-				}
-			}
-		}
-		return str;
+				return path.substr(i + 1, std::string::npos);	//npos means until the end of the string
+		return std::string();
 	}
 
-	// Can be made in 1 line
 	FileInfo file_info(const std::string& path)
 	{
 		FileInfo info;
-		info.filepath_ = path;
+		info._path = path;
 		return info;
 	}
-	
-	std::string extension(const std::string& filepath)
+
+	std::string extension(const std::string& path)
 	{
-		auto character_index = filepath.find_last_of('.');
+		std::string str(path);
+		std::string ext;
 
-		// We throw an exception if we didn't find the character
-		if(character_index==std::string::npos)	
+		for(auto it = path.crbegin(); it != path.crend(); it++)
 		{
-			throw std::invalid_argument(("No extension found in filepath : " + filepath).c_str());
+			if(*it == '.')
+			{
+				ext
+			}
 		}
-
-		// we throw an exception if the dot is the last char of the string
-		if(character_index== filepath.size()-1)
-		{
-			throw std::invalid_argument(("No extension found after the dot character : "+filepath).c_str());
-		}
-
-		return filepath.substr(character_index+1, std::string::npos);
-	}
-
-	bool has_extension(const std::string& filepath)
-	{
-		auto character_index = filepath.find_last_of('.');
-
-		// If we don't find a . character, there's no extension
-		if(character_index == std::string::npos)	
-		{
-			return false;
-		}
-
-		// if the . character is the last character of the string, there's still no character
-		if(character_index == filepath.size()-1)
-		{
-			return false;
-		}
-		return true;
+		
+		return ext;
 	}
 
 	bool is_directory(const std::string& path)
@@ -205,21 +142,26 @@ namespace corgi { namespace filesystem {
 
 	bool FileInfo::is_valid()const
 	{
-		return is_valid_;
+		return _is_valid;
 	}
 
 	bool FileInfo::is_folder()const 
 	{
-		return is_directory(filepath_);
+		return is_directory(_path);
+	}
+
+	std::string FileInfo::extension()const
+	{
+		return filesystem::extension(_path);
 	}
 
 	std::string FileInfo::name()const
 	{
-		return filename(filepath_);
+		return filename(_path);
 	}
 
 	const std::string& FileInfo::path()const
 	{
-		return filepath_;
+		return _path;
 	}
 }}
